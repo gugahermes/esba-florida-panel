@@ -451,34 +451,32 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   <div class="sec-top-icon">📈</div>
   <div class="sec-top-text">
     <div class="sec-top-title">P&amp;L 2026 · Resultado financiero</div>
-    <div class="sec-top-sub">ENE–MAY 2026 · Cash basis · ARS corrientes · MAY cerrado</div>
+    <div class="sec-top-sub">ENE–JUN 2026 · Cash basis · ARS corrientes · derivado de Caja Diaria en vivo</div>
   </div>
   <div class="sec-top-right">
-    <span class="badge" style="background:#10b981;">📋 al 2/6/2026</span>
-    <button class="refresh-btn" onclick="refreshSection('pl26',this)" title="Pedirle a Claude que actualice el P&L">🔄 Actualizar P&L</button>
+    <span class="fci-sync" id="pl26SyncLbl">⏳ Cargando...</span>
+    <button class="refresh-btn" onclick="loadPL26(this)" title="Recargar P&L desde las planillas de Caja">🔄 Actualizar P&L</button>
   </div>
 </div>
 
-<div class="insight-bar green">
+<div class="insight-bar green" id="pl26Insight">
   <span class="ins-label">💡 Dato clave</span>
-  ENE–ABR acumulado: <strong>+$79.7M</strong> · FEB inflado por pago extraordinario Empresas $62.1M · Sin ese ítem, resultado base 4 meses = <strong>+$17.6M</strong> · Margen operativo sostenible: ~15–20% · MAY distorsionado: sueldos ABR ($28.9M) ya pagados
+  Cargando...
 </div>
 <div class="kpi-grid-4" style="margin-bottom:12px;">
-  <div class="kpi g"><div class="kpi-lbl">Ingresos acum. ENE–ABR</div><div class="kpi-val pos">$327.2M</div><div class="kpi-sub">Sin MAY (en curso)</div></div>
-  <div class="kpi r"><div class="kpi-lbl">Egresos acum. ENE–ABR</div><div class="kpi-val neg">$247.5M</div><div class="kpi-sub">Incl. sueldos y cargas</div></div>
-  <div class="kpi g"><div class="kpi-lbl">Resultado ENE–ABR</div><div class="kpi-val pos">+$79.7M</div><div class="kpi-sub">Incl. Telemática FEB $62.1M</div></div>
-  <div class="kpi t"><div class="kpi-lbl">Resultado operativo</div><div class="kpi-val" style="color:#0891b2;">+$17.6M</div><div class="kpi-sub">Ex-Telemática · ENE–ABR</div></div>
+  <div class="kpi g"><div class="kpi-lbl">Ingresos acum. (meses cerrados)</div><div class="kpi-val pos" id="pl26KpiIng">—</div><div class="kpi-sub" id="pl26KpiIngSub">Cargando...</div></div>
+  <div class="kpi r"><div class="kpi-lbl">Egresos acum. (meses cerrados)</div><div class="kpi-val neg" id="pl26KpiEgr">—</div><div class="kpi-sub">Incl. sueldos y cargas</div></div>
+  <div class="kpi g"><div class="kpi-lbl">Resultado acum.</div><div class="kpi-val pos" id="pl26KpiRes">—</div><div class="kpi-sub" id="pl26KpiResSub">Cargando...</div></div>
+  <div class="kpi t"><div class="kpi-lbl">Resultado ex-extraordinarios</div><div class="kpi-val" style="color:#0891b2;" id="pl26KpiOp">—</div><div class="kpi-sub">Sin ingresos puntuales de Empresas</div></div>
 </div>
 
-<div class="alerts" style="margin-bottom:14px;">
-  <div class="alert yel">⚠️ <strong>FEB extraordinario:</strong> Telemática y Educación ingresó $62.1M en FEB. Sin este ítem, resultado ENE–ABR sería +$17.6M.</div>
-  <div class="alert sky">📅 <strong>MAY en curso:</strong> Datos al 2/6/2026. Sueldos ABR ($28.9M) ya pagados; ingresos aún acumulando. Resultado parcial: −$9.9M.</div>
-  <div class="alert blu">💡 <strong>Timing sueldos:</strong> Los sueldos del mes N se pagan en el mes N+1 (primera semana). Esto distorsiona resultados individuales.</div>
+<div class="alerts" style="margin-bottom:14px;" id="pl26Alerts">
+  <div class="alert blu">⏳ Cargando datos de las planillas de Caja...</div>
 </div>
 
 <div class="row col1" style="margin-bottom:14px;">
   <div class="card">
-    <div class="card-title">Ingresos vs Egresos vs Resultado neto 2026 <span class="card-note">Barras = ing/egr · Línea = resultado · Punteado = proyección JUN · ARS millones</span></div>
+    <div class="card-title">Ingresos vs Egresos vs Resultado neto 2026 <span class="card-note">Barras = ing/egr · Línea = resultado · último mes en curso, parcial · ARS millones</span></div>
     <div class="chart-hide" style="height:260px;"><canvas id="chartPL26"></canvas></div>
   </div>
 </div>
@@ -497,7 +495,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 <div class="tbl-card">
   <div class="tbl-hdr">
     <div class="tbl-title">P&amp;L mes a mes · 2026</div>
-    <div class="tbl-note">ARS corrientes · *MAY parcial al 26/5</div>
+    <div class="tbl-note">ARS corrientes · *mes en curso, parcial</div>
   </div>
   <div class="tbl-wrap"><table id="tablePL26"></table></div>
 </div>
@@ -1530,125 +1528,159 @@ loadSedes26();
   t.innerHTML=h;
 })();
 
-// ════════════ P&L 2026 DATA & CHARTS ════════════
-const D26={
-  meses:['ENE','FEB','MAR','ABR','MAY*'],
-  ingresos: [45.15,125.42,74.09,82.52,24.22],
-  egresos:  [58.10, 62.08,65.71,61.57,34.07],
-  resultado:[-12.95,63.34, 8.38,20.95, -9.85],
-  // ingresos breakdown (M) – MAY al 11/5
-  bachillerato:[35.3,57.6,68.4,76.8,20.3],
-  empresas:    [ 8.5,66.3, 4.1, 4.0, 0.8],
-  ucasal:      [ 1.1, 1.3, 0.9, 1.2, 1.1],
-  terciarios:  [ 0.0, 0.0, 0.4, 0.3, 0.0],
-  ingOtros:    [ 0.3, 0.3, 0.3, 0.2, 2.0],
-  // egresos breakdown (M) – MAY al 11/5
-  sueldos:      [26.4,28.6,30.7,28.9,28.9],
-  impuestos:    [15.4,13.3,12.4,12.1, 0.0],
-  participacion:[ 3.1, 2.5, 6.2, 7.8, 0.4],
-  publicidad:   [ 2.1, 2.5, 2.4, 2.2, 2.0],
-  alquiler:     [ 1.9, 1.9, 2.1, 2.1, 0.0],
-  moratorias:   [ 2.3, 2.3, 2.3, 2.3, 0.0],
-  proveedores:  [ 1.7, 1.8, 1.8, 2.0, 1.5],
-  bancarios:    [ 1.7, 1.1, 1.9, 1.6, 1.3],
-  servicios:    [ 0.3, 0.2, 0.3, 0.3, 0.5],
-  egrOtros:     [ 3.2, 7.9, 5.5, 2.3, 0.5]
+// ════════════ P&L 2026 · derivado en vivo de las planillas de Caja ════════════
+const FALLBACK_D26={
+  meses:['ENE','FEB','MAR','ABR','MAY'],
+  ingresos: [45.15,125.42,74.09,82.52,24.22].map(v=>v*1e6),
+  egresos:  [58.10, 62.08,65.71,61.57,34.07].map(v=>v*1e6),
+  ing:[
+    {Bachillerato:35.3,Empresas:8.5,UCASAL:1.1,Terciarios:0.0,Otros:0.3},
+    {Bachillerato:57.6,Empresas:66.3,UCASAL:1.3,Terciarios:0.0,Otros:0.3},
+    {Bachillerato:68.4,Empresas:4.1,UCASAL:0.9,Terciarios:0.4,Otros:0.3},
+    {Bachillerato:76.8,Empresas:4.0,UCASAL:1.2,Terciarios:0.3,Otros:0.2},
+    {Bachillerato:20.3,Empresas:0.8,UCASAL:1.1,Terciarios:0.0,Otros:2.0}
+  ].map(o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k,v*1e6]))),
+  egr:[
+    {Sueldos:26.4,Honorarios:0,Bancarios:3.4,Alquiler:1.9,Moratorias:2.3,Plataformas:0,Publicidad:2.1,Impuestos:15.4,Otros:5.2},
+    {Sueldos:28.6,Honorarios:0,Bancarios:2.9,Alquiler:1.9,Moratorias:2.3,Plataformas:0,Publicidad:2.5,Impuestos:13.3,Otros:9.7},
+    {Sueldos:30.7,Honorarios:0,Bancarios:4.1,Alquiler:2.1,Moratorias:2.3,Plataformas:0,Publicidad:2.4,Impuestos:12.4,Otros:7.3},
+    {Sueldos:28.9,Honorarios:0,Bancarios:3.6,Alquiler:2.1,Moratorias:2.3,Plataformas:0,Publicidad:2.2,Impuestos:12.1,Otros:5.8},
+    {Sueldos:28.9,Honorarios:0,Bancarios:2.8,Alquiler:0.0,Moratorias:0.0,Plataformas:0,Publicidad:2.0,Impuestos:0.0,Otros:0.4}
+  ].map(o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k,v*1e6])))
 };
-// Chart: P&L bar+line (con proyección JUN basada en promedio MAR+ABR)
-const pl26Labels=[...D26.meses,'JUN*'];
-// Proyección JUN: promedio MAR+ABR (excluye FEB extraordinario)
-const projIng=parseFloat(((D26.ingresos[2]+D26.ingresos[3])/2).toFixed(2)); // ~78.3M
-const projEgr=parseFloat(((D26.egresos[2]+D26.egresos[3])/2).toFixed(2));  // ~63.6M
-const projRes=parseFloat((projIng-projEgr).toFixed(2));
-// Datasets con null para JUN en serie real, y null para real en JUN en serie proyección
-const pl26Ing=[...D26.ingresos,null];
-const pl26Egr=[...D26.egresos,null];
-const pl26Res=[...D26.resultado,null];
-const pl26ProjIng=[null,null,null,null,D26.ingresos[4],projIng];
-const pl26ProjEgr=[null,null,null,null,D26.egresos[4],projEgr];
-const pl26ProjRes=[null,null,null,null,D26.resultado[4],projRes];
-new Chart(document.getElementById('chartPL26'),{type:'bar',data:{labels:pl26Labels,datasets:[
-  {label:'Ingresos',data:pl26Ing,backgroundColor:'rgba(59,130,246,0.7)',borderColor:'#3b82f6',borderWidth:1,borderRadius:4,order:2},
-  {label:'Egresos',data:pl26Egr,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1,borderRadius:4,order:2},
-  {label:'Ingresos (proy.)',data:pl26ProjIng,backgroundColor:'rgba(59,130,246,0.25)',borderColor:'#3b82f6',borderWidth:1,borderRadius:4,borderDash:[4,4],order:2},
-  {label:'Egresos (proy.)',data:pl26ProjEgr,backgroundColor:'rgba(239,68,68,0.2)',borderColor:'#ef4444',borderWidth:1,borderRadius:4,order:2},
-  {label:'Resultado',data:pl26Res,type:'line',borderColor:'#10b981',backgroundColor:'transparent',borderWidth:2.5,pointRadius:6,pointBackgroundColor:D26.resultado.map(v=>v>=0?'#10b981':'#dc2626').concat([null]),pointBorderColor:'#fff',pointBorderWidth:2,fill:false,tension:0.35,order:1,yAxisID:'y2'},
-  {label:'Resultado (proy.)',data:pl26ProjRes,type:'line',borderColor:'#10b981',backgroundColor:'transparent',borderWidth:2,borderDash:[6,4],pointRadius:[0,0,0,0,0,6],pointBackgroundColor:'rgba(16,185,129,0.5)',pointBorderColor:'#fff',pointBorderWidth:2,fill:false,tension:0,order:1,yAxisID:'y2'}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{padding:12,usePointStyle:true,filter:item=>item.text&&!item.text.includes('proy.')?true:item.datasetIndex===5}},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y!=null?(ctx.parsed.y>=0?'+':'')+'$'+ctx.parsed.y.toFixed(1)+'M':'—'}`}}},scales:{x:{grid:{color:gc},border:{color:bc}},y:{grid:{color:gc},border:{color:bc},ticks:{callback:v=>'$'+v+'M'},title:{display:true,text:'M ARS',color:'#94a3b8',font:{size:10}}},y2:{position:'right',grid:{display:false},border:{color:bc},ticks:{callback:v=>(v>=0?'+':'')+v+'M',color:'#10b981'},title:{display:true,text:'Resultado',color:'#10b981',font:{size:10}}}}}});
-// Chart: ingresos stacked
-new Chart(document.getElementById('chartIng26'),{type:'bar',data:{labels:D26.meses,datasets:[
-  {label:'Bachillerato',data:D26.bachillerato,backgroundColor:'rgba(59,130,246,0.82)',borderRadius:3,stack:'i'},
-  {label:'Empresas',data:D26.empresas,backgroundColor:'rgba(6,182,212,0.82)',borderRadius:3,stack:'i'},
-  {label:'UCASAL',data:D26.ucasal,backgroundColor:'rgba(167,139,250,0.82)',borderRadius:3,stack:'i'},
-  {label:'Terciarios',data:D26.terciarios,backgroundColor:'rgba(244,114,182,0.82)',borderRadius:3,stack:'i'},
-  {label:'Otros',data:D26.ingOtros,backgroundColor:'rgba(148,163,184,0.7)',borderRadius:3,stack:'i'}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:8,usePointStyle:true,boxWidth:9,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y.toFixed(1)}M`}}},scales:{x:{stacked:true,grid:{color:gc},border:{color:bc}},y:{stacked:true,grid:{color:gc},border:{color:bc},ticks:{callback:v=>'$'+v+'M'}}}}});
-// Chart: egresos stacked
-new Chart(document.getElementById('chartEgr26'),{type:'bar',data:{labels:D26.meses,datasets:[
-  {label:'Sueldos',data:D26.sueldos,backgroundColor:'rgba(239,68,68,0.82)',borderRadius:3,stack:'e'},
-  {label:'Impuestos/Cargas',data:D26.impuestos,backgroundColor:'rgba(249,115,22,0.78)',borderRadius:3,stack:'e'},
-  {label:'Participación sedes',data:D26.participacion,backgroundColor:'rgba(234,179,8,0.78)',borderRadius:3,stack:'e'},
-  {label:'Moratorias',data:D26.moratorias,backgroundColor:'rgba(99,102,241,0.75)',borderRadius:3,stack:'e'},
-  {label:'Publicidad',data:D26.publicidad,backgroundColor:'rgba(236,72,153,0.75)',borderRadius:3,stack:'e'},
-  {label:'Proveedores',data:D26.proveedores,backgroundColor:'rgba(20,184,166,0.75)',borderRadius:3,stack:'e'},
-  {label:'Bancarios',data:D26.bancarios,backgroundColor:'rgba(14,165,233,0.75)',borderRadius:3,stack:'e'},
-  {label:'Alquiler',data:D26.alquiler,backgroundColor:'rgba(168,85,247,0.7)',borderRadius:3,stack:'e'},
-  {label:'Servicios',data:D26.servicios,backgroundColor:'rgba(52,211,153,0.7)',borderRadius:3,stack:'e'},
-  {label:'Otros egresos',data:D26.egrOtros,backgroundColor:'rgba(148,163,184,0.65)',borderRadius:3,stack:'e'}
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:6,usePointStyle:true,boxWidth:9,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y.toFixed(1)}M`}}},scales:{x:{stacked:true,grid:{color:gc},border:{color:bc}},y:{stacked:true,grid:{color:gc},border:{color:bc},ticks:{callback:v=>'$'+v+'M'}}}}});
-// Table P&L 2026
-(()=>{
+const PL26_MONTHS=[
+  {m:'ENE',id:'1JElUN05dxwGmFBvgrRrBblb33moFcl-PueVUEPKxRGs'},
+  {m:'FEB',id:'1hkGq2A7UWs1m8f7UcVGJHIdARA3g1KF59NriIizrEKo'},
+  {m:'MAR',id:'1rmk9M7lVBJfcQKmJRanFW6lNXCvJPGq7aE3pubfDRSA'},
+  {m:'ABR',id:'1MfeZV6_3rof1xzx6KJZoKzA96a8pLOVySvmK1sHKoUk'},
+  {m:'MAY',id:'1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8'},
+  {m:'JUN',id:'10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I'}
+];
+const ING_CATS=['Bachillerato','Empresas','UCASAL','Terciarios','Otros'];
+const EGR_CATS=['Sueldos','Honorarios','Bancarios','Alquiler','Moratorias','Plataformas','Publicidad','Impuestos','Otros'];
+function mapIngresoCategoria(mv){
+  const c=(mv.entCuenta||'').toLowerCase(),d=(mv.entDesc||'').toLowerCase();
+  if(/rescate.*inversi[oó]n/.test(c))return null;
+  if(c.includes('ucasal'))return'UCASAL';
+  if(c.includes('terciario'))return'Terciarios';
+  if(d.includes('telemátic')||d.includes('telematic')||c.includes('empresa')||d.includes('in company')||d.includes('incompany'))return'Empresas';
+  return'Bachillerato';
+}
+function mapEgresoCategoria(mv){
+  const c=(mv.salCuenta||'').toLowerCase(),d=(mv.salDesc||'').toLowerCase();
+  if(/^a inversi[oó]n$/.test(c))return null;
+  if(c.includes('sueldo'))return'Sueldos';
+  if(c.includes('honorario'))return'Honorarios';
+  if(c.includes('banc')||c.includes('gastos mp'))return'Bancarios';
+  if(c.includes('alquiler'))return'Alquiler';
+  if(c.includes('moratoria'))return'Moratorias';
+  if(c.includes('plataforma'))return'Plataformas';
+  if(c.includes('public'))return'Publicidad';
+  if(d.includes('afip')||d.includes('ganancias')||d.includes('ips ')||d.includes('saeoep'))return'Impuestos';
+  return'Otros';
+}
+function renderPL26(months){
+  const labels=months.map(mo=>mo.m+(mo.live===false?'':''));
+  const ing=months.map(mo=>mo.ingresos/1e6);
+  const egr=months.map(mo=>mo.egresos/1e6);
+  const res=months.map(mo=>(mo.ingresos-mo.egresos)/1e6);
+  if(chartPL26)chartPL26.destroy();
+  chartPL26=new Chart(document.getElementById('chartPL26'),{type:'bar',data:{labels,datasets:[
+    {label:'Ingresos',data:ing,backgroundColor:'rgba(59,130,246,0.7)',borderColor:'#3b82f6',borderWidth:1,borderRadius:4,order:2},
+    {label:'Egresos',data:egr,backgroundColor:'rgba(239,68,68,0.6)',borderColor:'#ef4444',borderWidth:1,borderRadius:4,order:2},
+    {label:'Resultado',data:res,type:'line',borderColor:'#10b981',backgroundColor:'transparent',borderWidth:2.5,pointRadius:6,pointBackgroundColor:res.map(v=>v>=0?'#10b981':'#dc2626'),pointBorderColor:'#fff',pointBorderWidth:2,fill:false,tension:0.35,order:1,yAxisID:'y2'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{padding:12,usePointStyle:true}}},scales:{x:{grid:{color:gc},border:{color:bc}},y:{grid:{color:gc},border:{color:bc},ticks:{callback:v=>'$'+v+'M'},title:{display:true,text:'M ARS',color:'#94a3b8',font:{size:10}}},y2:{position:'right',grid:{display:false},border:{color:bc},ticks:{callback:v=>(v>=0?'+':'')+v+'M',color:'#10b981'}}}}});
+
+  if(chartIng26)chartIng26.destroy();
+  const ingColors=['rgba(59,130,246,0.82)','rgba(6,182,212,0.82)','rgba(167,139,250,0.82)','rgba(244,114,182,0.82)','rgba(148,163,184,0.7)'];
+  chartIng26=new Chart(document.getElementById('chartIng26'),{type:'bar',data:{labels:months.map(mo=>mo.m),datasets:ING_CATS.map((cat,i)=>({label:cat,data:months.map(mo=>(mo.ing[cat]||0)/1e6),backgroundColor:ingColors[i],borderRadius:3,stack:'i'}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:8,usePointStyle:true,boxWidth:9,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y.toFixed(1)}M`}}},scales:{x:{stacked:true,grid:{color:gc},border:{color:bc}},y:{stacked:true,grid:{color:gc},border:{color:bc},ticks:{callback:v=>'$'+v+'M'}}}}});
+
+  if(chartEgr26)chartEgr26.destroy();
+  const egrColors=['rgba(239,68,68,0.82)','rgba(124,58,237,0.78)','rgba(14,165,233,0.75)','rgba(168,85,247,0.7)','rgba(99,102,241,0.75)','rgba(20,184,166,0.75)','rgba(236,72,153,0.75)','rgba(249,115,22,0.78)','rgba(148,163,184,0.65)'];
+  chartEgr26=new Chart(document.getElementById('chartEgr26'),{type:'bar',data:{labels:months.map(mo=>mo.m),datasets:EGR_CATS.map((cat,i)=>({label:cat,data:months.map(mo=>(mo.egr[cat]||0)/1e6),backgroundColor:egrColors[i],borderRadius:3,stack:'e'}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:6,usePointStyle:true,boxWidth:9,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y.toFixed(1)}M`}}},scales:{x:{stacked:true,grid:{color:gc},border:{color:bc}},y:{stacked:true,grid:{color:gc},border:{color:bc},ticks:{callback:v=>'$'+v+'M'}}}}});
+
   const t=document.getElementById('tablePL26');
-  let h=`<thead><tr>
-    <th>Mes</th>
-    <th class="tr">Ingresos</th><th class="tr">Egresos</th><th class="tr">Resultado</th>
-    <th class="tr">Bachillerato</th><th class="tr">Empresas</th><th class="tr">UCASAL</th><th class="tr">Terciarios</th>
-    <th class="tr">Sueldos</th><th class="tr">Imp./Cargas</th><th class="tr">Part. sedes</th>
-  </tr></thead><tbody>`;
-  D26.meses.forEach((m,i)=>{
-    const r=D26.resultado[i];
-    const isMay=m.includes('*');
-    h+=`<tr${isMay?' style="opacity:0.75;background:#fffbeb;"':''}>
-      <td class="bold">${m}${isMay?'<span style="font-size:0.58rem;color:#d97706;margin-left:4px;">parcial</span>':''}</td>
-      <td class="tr num-i">$${D26.ingresos[i].toFixed(1)}M</td>
-      <td class="tr num-g">$${D26.egresos[i].toFixed(1)}M</td>
+  let h=`<thead><tr><th>Mes</th><th class="tr">Ingresos</th><th class="tr">Egresos</th><th class="tr">Resultado</th><th class="tr">Bachillerato</th><th class="tr">Empresas</th><th class="tr">UCASAL</th><th class="tr">Sueldos</th><th class="tr">Honorarios</th><th class="tr">Bancarios</th></tr></thead><tbody>`;
+  months.forEach((mo,i)=>{
+    const r=(mo.ingresos-mo.egresos)/1e6;
+    const isLast=mo.live===false&&i===months.length-1;
+    h+=`<tr${isLast?' style="opacity:0.75;background:#fffbeb;"':''}>
+      <td class="bold">${mo.m}${mo.parcial?'<span style="font-size:0.58rem;color:#d97706;margin-left:4px;">parcial</span>':''}</td>
+      <td class="tr num-i">$${(mo.ingresos/1e6).toFixed(1)}M</td>
+      <td class="tr num-g">$${(mo.egresos/1e6).toFixed(1)}M</td>
       <td class="tr ${r>=0?'num-p':'num-n'}">${r>=0?'+':''}$${Math.abs(r).toFixed(1)}M</td>
-      <td class="tr" style="color:#3b82f6;font-weight:600;">$${D26.bachillerato[i].toFixed(1)}M</td>
-      <td class="tr" style="color:#0891b2;font-weight:600;">$${D26.empresas[i].toFixed(1)}M</td>
-      <td class="tr" style="color:#7c3aed;font-weight:600;">$${D26.ucasal[i].toFixed(1)}M</td>
-      <td class="tr" style="color:#db2777;font-weight:600;">$${D26.terciarios[i].toFixed(1)}M</td>
-      <td class="tr" style="color:#dc2626;font-weight:600;">$${D26.sueldos[i].toFixed(1)}M</td>
-      <td class="tr" style="color:#ea580c;font-weight:600;">$${D26.impuestos[i].toFixed(1)}M</td>
-      <td class="tr" style="color:#ca8a04;font-weight:600;">$${D26.participacion[i].toFixed(1)}M</td>
+      <td class="tr" style="color:#3b82f6;font-weight:600;">$${((mo.ing.Bachillerato||0)/1e6).toFixed(1)}M</td>
+      <td class="tr" style="color:#0891b2;font-weight:600;">$${((mo.ing.Empresas||0)/1e6).toFixed(1)}M</td>
+      <td class="tr" style="color:#7c3aed;font-weight:600;">$${((mo.ing.UCASAL||0)/1e6).toFixed(1)}M</td>
+      <td class="tr" style="color:#dc2626;font-weight:600;">$${((mo.egr.Sueldos||0)/1e6).toFixed(1)}M</td>
+      <td class="tr" style="color:#7c3aed;font-weight:600;">$${((mo.egr.Honorarios||0)/1e6).toFixed(1)}M</td>
+      <td class="tr" style="color:#0ea5e9;font-weight:600;">$${((mo.egr.Bancarios||0)/1e6).toFixed(1)}M</td>
     </tr>`;
   });
-  // Acum ENE-ABR (without partial May)
-  const n=4;
-  const ti=D26.ingresos.slice(0,n).reduce((a,b)=>a+b,0);
-  const te=D26.egresos.slice(0,n).reduce((a,b)=>a+b,0);
-  const tr2=D26.resultado.slice(0,n).reduce((a,b)=>a+b,0);
-  const tb=D26.bachillerato.slice(0,n).reduce((a,b)=>a+b,0);
-  const temp=D26.empresas.slice(0,n).reduce((a,b)=>a+b,0);
-  const tu=D26.ucasal.slice(0,n).reduce((a,b)=>a+b,0);
-  const tt=D26.terciarios.slice(0,n).reduce((a,b)=>a+b,0);
-  const ts=D26.sueldos.slice(0,n).reduce((a,b)=>a+b,0);
-  const tim=D26.impuestos.slice(0,n).reduce((a,b)=>a+b,0);
-  const tp=D26.participacion.slice(0,n).reduce((a,b)=>a+b,0);
+  const closed=months.filter(mo=>!mo.parcial);
+  const ti=closed.reduce((a,mo)=>a+mo.ingresos,0),te=closed.reduce((a,mo)=>a+mo.egresos,0),tr2=ti-te;
+  const tEmpresas=closed.reduce((a,mo)=>a+(mo.ing.Empresas||0),0);
   h+=`</tbody><tfoot><tr>
-    <td>ACUM. ENE–ABR</td>
-    <td class="tr num-i">$${ti.toFixed(1)}M</td>
-    <td class="tr num-g">$${te.toFixed(1)}M</td>
-    <td class="tr ${tr2>=0?'num-p':'num-n'}">${tr2>=0?'+':''}$${Math.abs(tr2).toFixed(1)}M</td>
-    <td class="tr" style="color:#3b82f6;font-weight:700;">$${tb.toFixed(1)}M</td>
-    <td class="tr" style="color:#0891b2;font-weight:700;">$${temp.toFixed(1)}M</td>
-    <td class="tr" style="color:#7c3aed;font-weight:700;">$${tu.toFixed(1)}M</td>
-    <td class="tr" style="color:#db2777;font-weight:700;">$${tt.toFixed(1)}M</td>
-    <td class="tr" style="color:#dc2626;font-weight:700;">$${ts.toFixed(1)}M</td>
-    <td class="tr" style="color:#ea580c;font-weight:700;">$${tim.toFixed(1)}M</td>
-    <td class="tr" style="color:#ca8a04;font-weight:700;">$${tp.toFixed(1)}M</td>
+    <td>ACUM. ${closed.map(mo=>mo.m).join('-')}</td>
+    <td class="tr num-i">$${(ti/1e6).toFixed(1)}M</td>
+    <td class="tr num-g">$${(te/1e6).toFixed(1)}M</td>
+    <td class="tr ${tr2>=0?'num-p':'num-n'}">${tr2>=0?'+':''}$${Math.abs(tr2/1e6).toFixed(1)}M</td>
+    <td colspan="6" class="tr" style="color:#94a3b8;font-size:0.66rem">Ex-Empresas: ${((tr2-tEmpresas)>=0?'+':'')+'$'+((tr2-tEmpresas)/1e6).toFixed(1)}M</td>
   </tr></tfoot>`;
   t.innerHTML=h;
-})();
+
+  // KPIs + insight + alerts
+  document.getElementById('pl26KpiIng').textContent='$'+(ti/1e6).toFixed(1)+'M';
+  document.getElementById('pl26KpiIngSub').textContent=closed.map(mo=>mo.m).join('–')+(months.some(mo=>mo.parcial)?' · sin '+months.find(mo=>mo.parcial).m+' (en curso)':'');
+  document.getElementById('pl26KpiEgr').textContent='$'+(te/1e6).toFixed(1)+'M';
+  document.getElementById('pl26KpiRes').textContent=(tr2>=0?'+':'')+'$'+(tr2/1e6).toFixed(1)+'M';
+  document.getElementById('pl26KpiResSub').textContent='Incl. extraordinarios Empresas $'+(tEmpresas/1e6).toFixed(1)+'M';
+  const resOp=tr2-tEmpresas;
+  document.getElementById('pl26KpiOp').textContent=(resOp>=0?'+':'')+'$'+(resOp/1e6).toFixed(1)+'M';
+
+  const mesExtra=closed.reduce((best,mo)=>(mo.ing.Empresas||0)>(best?best.ing.Empresas:0)?mo:best,null);
+  document.getElementById('pl26Insight').innerHTML=`<span class="ins-label">💡 Dato clave</span>
+    ${closed.map(mo=>mo.m).join('–')} acumulado: <strong>${tr2>=0?'+':''}$${(tr2/1e6).toFixed(1)}M</strong>` +
+    (mesExtra&&mesExtra.ing.Empresas>20e6?` · ${mesExtra.m} inflado por ingreso de Empresas $${(mesExtra.ing.Empresas/1e6).toFixed(1)}M · Sin ese ítem, resultado = <strong>${resOp>=0?'+':''}$${(resOp/1e6).toFixed(1)}M</strong>`:'') +
+    (months.some(mo=>mo.parcial)?` · ${months.find(mo=>mo.parcial).m} en curso, datos parciales`:'');
+
+  document.getElementById('pl26Alerts').innerHTML=`
+    <div class="alert blu">💡 <strong>Timing sueldos:</strong> los sueldos del mes N se pagan en el mes N+1 (primera semana). Esto distorsiona resultados individuales mes a mes.</div>
+    ${mesExtra&&mesExtra.ing.Empresas>20e6?`<div class="alert yel">⚠️ <strong>${mesExtra.m} extraordinario:</strong> ingreso puntual de Empresas $${(mesExtra.ing.Empresas/1e6).toFixed(1)}M no es recurrente.</div>`:''}
+    ${months.some(mo=>mo.parcial)?`<div class="alert sky">📅 <strong>${months.find(mo=>mo.parcial).m} en curso:</strong> datos parciales, acumulando al momento de la consulta.</div>`:''}
+  `;
+}
+async function loadPL26(btn){
+  const syncLbl=document.getElementById('pl26SyncLbl');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">⏳</span> Cargando...';}
+  try{
+    const months=await Promise.all(PL26_MONTHS.map(async(mo,i)=>{
+      const rows=await fetchSheetCSV(mo.id);
+      const p=parseCajaCSV(rows);
+      const ing={};ING_CATS.forEach(c=>ing[c]=0);
+      const egr={};EGR_CATS.forEach(c=>egr[c]=0);
+      p.movs.forEach(mv=>{
+        if(mv.entImporte){const cat=mapIngresoCategoria(mv);if(cat)ing[cat]=(ing[cat]||0)+mv.entImporte;}
+        if(mv.salImporte){const cat=mapEgresoCategoria(mv);if(cat)egr[cat]=(egr[cat]||0)+mv.salImporte;}
+      });
+      const ingTot=Object.values(ing).reduce((a,b)=>a+b,0);
+      const egrTot=Object.values(egr).reduce((a,b)=>a+b,0);
+      const ingresos=p.entradasReales!==null&&p.entradasReales>0?p.entradasReales:ingTot;
+      const egresos=p.salidasReales!==null&&p.salidasReales>0?p.salidasReales:egrTot;
+      return{m:mo.m,ingresos,egresos,ing,egr,parcial:i===PL26_MONTHS.length-1};
+    }));
+    if(months.filter(mo=>mo.ingresos>0).length<4)throw new Error('parse failed');
+    renderPL26(months);
+    syncLbl.textContent='🟢 Datos en vivo · Google Sheets';syncLbl.classList.add('live');
+  }catch(e){
+    const months=FALLBACK_D26.meses.map((m,i)=>({m,ingresos:FALLBACK_D26.ingresos[i],egresos:FALLBACK_D26.egresos[i],ing:FALLBACK_D26.ing[i],egr:FALLBACK_D26.egr[i],parcial:i===FALLBACK_D26.meses.length-1,live:false}));
+    renderPL26(months);
+    syncLbl.textContent='📋 Datos al 18/5/2026 (sin conexión)';syncLbl.classList.remove('live');
+  }
+  if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualizar P&L';}
+}
+let chartPL26=null,chartIng26=null,chartEgr26=null;
+loadPL26();
 
 // ════════════ SIMULADOR ════════════
 function updateReachSim(){
