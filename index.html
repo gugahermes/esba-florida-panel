@@ -996,33 +996,37 @@ function renderFci(data){
   document.getElementById('fciMovIngTot').innerHTML='<span style="color:#16a34a;font-weight:700">+'+fm2(totalIng)+'</span>';
   document.getElementById('fciMovRetTot').innerHTML='<span style="color:#dc2626;font-weight:700">−'+fm2(totalRet)+'</span>';
 }
+// Lee una Google Sheet pública (Archivo > Compartir > "Cualquier persona con el enlace")
+// vía el endpoint CSV de gviz — funciona desde cualquier navegador, sin login ni API key.
+async function fetchSheetCSV(sheetId,gid){
+  const url=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv${gid?'&gid='+gid:''}`;
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('No se pudo leer la planilla ('+res.status+')');
+  const text=await res.text();
+  return text.trim().split('\n').map(line=>line.slice(1,-1).split('","'));
+}
+function parseARSCell(s){
+  if(!s)return null;
+  const v=parseFloat(s.replace(/[^0-9,.-]/g,'').replace(/\./g,'').replace(',','.'));
+  return isNaN(v)?null:v;
+}
 async function loadFci(){
   const syncLbl=document.getElementById('fciSyncLbl');
   try{
-    if(typeof window.cowork==='undefined'||!window.cowork.callMcpTool)throw new Error('no cowork');
-    const result=await window.cowork.callMcpTool('mcp__e6d1f0ad-044d-45ff-a09d-e22937a9f561__read_file_content',{fileId:'1talroWiW1iCD0P6oBqWCWnrNquLxP9ukFbFurl9Nv1s'});
-    const text=typeof result==='string'?result:(result?.content||result?.text||JSON.stringify(result));
-    const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.startsWith('|'));
-    const vals=[],movs=[];
-    for(const l of lines){
-      const cells=l.split('|').map(c=>c.trim()).filter(c=>c!=='');
-      if(cells.length===2){
-        const d=cells[0];const v=parseFloat((cells[1]||'').replace(/[^0-9,.-]/g,'').replace(',','.'));
-        if(d.match(/\d+\/\d+/)&&!isNaN(v)&&v>0)vals.push([d,v]);
-      }
-      if(cells.length>=3){
-        const d=cells[0];const tipo=cells[1]?.toLowerCase()||'';const v=parseFloat((cells[2]||'').replace(/[^0-9,.-]/g,'').replace(',','.'));
-        if(d.match(/\d+\/\d+/)&&!isNaN(v)&&v>0)movs.push({fecha:d,tipo,monto:v});
-      }
-    }
-    if(vals.length>3){
-      const ingresos=movs.filter(m=>m.tipo.includes('ingreso')).map(m=>[m.fecha,m.monto]);
-      const retiros=movs.filter(m=>m.tipo.includes('retiro')).map(m=>[m.fecha,m.monto]);
-      renderFci({valuations:vals,ingresos:ingresos.length?ingresos:FALLBACK_FCI.ingresos,retiros:retiros.length?retiros:FALLBACK_FCI.retiros});
-      syncLbl.textContent='🟢 Datos en vivo';syncLbl.classList.add('live');return;
+    const rows=await fetchSheetCSV('1talroWiW1iCD0P6oBqWCWnrNquLxP9ukFbFurl9Nv1s');
+    const ingresos=[],retiros=[],valuations=[];
+    rows.forEach(r=>{
+      const[ingD,ingV,retD,retV,,valD,valV]=r;
+      if(ingD&&ingV){const v=parseARSCell(ingV);if(v)ingresos.push([ingD,v]);}
+      if(retD&&retV){const v=parseARSCell(retV);if(v)retiros.push([retD,v]);}
+      if(valD&&valV){const v=parseARSCell(valV);if(v)valuations.push([valD,v]);}
+    });
+    if(valuations.length>3){
+      renderFci({valuations,ingresos:ingresos.length?ingresos:FALLBACK_FCI.ingresos,retiros:retiros.length?retiros:FALLBACK_FCI.retiros});
+      syncLbl.textContent='🟢 Datos en vivo · Google Sheets';syncLbl.classList.add('live');return;
     }
     throw new Error('parse failed');
-  }catch(e){renderFci(FALLBACK_FCI);syncLbl.textContent='📋 Datos al 2/6/2026';syncLbl.classList.remove('live');}
+  }catch(e){renderFci(FALLBACK_FCI);syncLbl.textContent='📋 Datos al 2/6/2026 (sin conexión)';syncLbl.classList.remove('live');}
 }
 loadFci();
 loadMetaAds();
