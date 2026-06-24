@@ -1093,43 +1093,42 @@ function selectYear(yr){
   }
 }
 
-function parseCajaMD(md){
-  const parseARS=s=>{const m=(s||'').match(/\$\s*([\d.]+,\d{2})/);return m?parseFloat(m[1].replace(/\./g,'').replace(',','.')):null;};
-  const lines=md.split('\n').map(l=>l.trim());
-  const findV=(...kws)=>{for(const kw of kws){const re=new RegExp(kw,'i');for(const l of lines){if(re.test(l)){const v=parseARS(l);if(v!==null&&v>0)return v;}}}return null;};
-  const totalSalidas=findV('TOTAL SALIDAS');
-  const saldoActual=findV('SALDO Actual');
-  const suma=findV('\\bSUMA\\b');
-  let santander=null,bbva8=null,mp=null,cajaRec=null,cajaAdm=null;
-  let ctx='';
-  for(const l of lines){
-    if(/Santanderrio|Santander.*Importes/i.test(l))ctx='sant';
-    else if(/Banco BBVA/i.test(l))ctx='bbva';
-    else if(/^[|]\s*Efectivo\s*[|]/i.test(l))ctx='efec';
-    else if(/Mercado Pago.*Importes/i.test(l))ctx='mp';
-    if(ctx==='sant'&&/Cuenta Corriente/i.test(l)&&!santander)santander=parseARS(l);
-    if(ctx==='bbva'&&/Corriente\s*\/8/i.test(l))bbva8=parseARS(l);
-    if(ctx==='efec'&&/Recepci/i.test(l))cajaRec=parseARS(l);
-    if(ctx==='efec'&&/Administraci/i.test(l))cajaAdm=parseARS(l);
-    if(ctx==='mp'&&/wallet/i.test(l))mp=parseARS(l);
-  }
-  // Parse main movements table
-  const movs=[];let inMain=false;let curDate='';
-  for(const l of lines){
-    if(!inMain&&/FECHA.*ENTRADA.*SALIDA/i.test(l)){inMain=true;continue;}
-    if(inMain){
-      if(/^[\|\s\-:]+$/.test(l))continue;
-      if(/Mercado Pago.*Saldo Anterior/i.test(l))break;
-      if(!l.startsWith('|'))break;
-      const cells=l.split('|').map(c=>c.trim()).filter(c=>c!=='');
-      if(cells.length<4)continue;
-      if(cells[0])curDate=cells[0];
-      const entImporte=parseARS(cells[3]||'');
-      const salImporte=parseARS(cells[6]||cells[5]||'');
-      if(entImporte||salImporte){movs.push({fecha:curDate,entDesc:cells[1]||'',entCuenta:cells[2]||'',entImporte,salDesc:cells[4]||'',salCuenta:cells[5]||'',salImporte});}
+// Parsea la planilla "CAJA <MES>" en su formato real de columnas:
+// A=Fecha B=Entrada desc C=Entrada cuenta D=Entrada importe E=Salida desc F=Salida cuenta G=Salida importe
+// ...seguido de un bloque resumen (TOTAL ENTRADAS/SALIDAS, SALDO, Entradas/Salidas reales, Inversión fondo, Mercado Pago).
+function parseCajaCSV(rows){
+  const pv=parseARSCell;
+  const movs=[];
+  let inSummary=false;
+  let totalEntradas=null,totalSalidas=null,saldoActual=null,suma=null;
+  let entradasReales=null,salidasReales=null,invFondo=null;
+  let mpSaldoAnt=null,mpCobros=null,mpSalidas=null;
+  for(const r of rows){
+    const c1=(r[1]||'').trim(),c5=(r[5]||'').trim();
+    if(/^TOTAL ENTRADAS/i.test(c1))inSummary=true;
+    if(!inSummary){
+      const fecha=r[0],entDesc=r[1],entCuenta=r[2],entImporte=pv(r[3]),salDesc=r[4],salCuenta=r[5],salImporte=pv(r[6]);
+      if((entDesc&&entImporte)||(salDesc&&salImporte))movs.push({fecha,entDesc,entCuenta,entImporte,salDesc,salCuenta,salImporte});
+      continue;
     }
+    if(/^TOTAL ENTRADAS/i.test(c1))totalEntradas=pv(r[3]);
+    if(/^TOTAL SALIDAS/i.test(c5))totalSalidas=pv(r[6]);
+    if(/^SALDO Actual/i.test(c5))saldoActual=pv(r[6]);
+    if(/^SUMA/i.test(c1)&&suma===null)suma=pv(r[3]);
+    if(/^Entradas Reales/i.test(c1))entradasReales=pv(r[3]);
+    if(/^Salidas reales/i.test(c5))salidasReales=pv(r[6]);
+    if(/^Inversi[oó]n fondo/i.test(c5))invFondo=pv(r[6]);
+    if(/^Saldo Anterior/i.test(c1)&&mpSaldoAnt===null)mpSaldoAnt=pv(r[2]);
+    if(/^Cobros realizados/i.test(c1))mpCobros=pv(r[2]);
+    if(/^Salidas de dinero/i.test(c1))mpSalidas=pv(r[2]);
   }
-  return{totalSalidas,saldoActual,suma,santander,bbva8,efectivo:(cajaRec||0)+(cajaAdm||0),cajaRec,cajaAdm,mp,movs};
+  const rescateFCI=movs.reduce((s,m)=>s+(/rescate.*inversi[oó]n/i.test(m.entCuenta||'')?(m.entImporte||0):0),0);
+  const mp=(mpSaldoAnt!==null||mpCobros!==null||mpSalidas!==null)?(mpSaldoAnt||0)+(mpCobros||0)-(mpSalidas||0):null;
+  return{
+    totalSalidas:totalEntradas!==null?totalSalidas:null,saldoActual,suma,
+    santander:null,bbva8:null,efectivo:null,mp,
+    movs,entradasReales,salidasReales,invFondo,rescateFCI
+  };
 }
 
 async function selectMonth(mo,fileId,label){
@@ -1138,13 +1137,11 @@ async function selectMonth(mo,fileId,label){
   const content=document.getElementById('cajaContent');
   content.innerHTML='<div class="caja-loading">⏳ Cargando '+label+'...</div>';
   try{
-    if(typeof window.cowork==='undefined'||!window.cowork.callMcpTool)throw new Error('no cowork');
-    const result=await window.cowork.callMcpTool('mcp__e6d1f0ad-044d-45ff-a09d-e22937a9f561__read_file_content',{fileId});
-    const text=typeof result==='string'?result:(result?.content||result?.text||JSON.stringify(result));
-    const d=parseCajaMD(text);
+    const rows=await fetchSheetCSV(fileId);
+    const d=parseCajaCSV(rows);
     renderCaja(d,label,fileId);
   }catch(e){
-    content.innerHTML=`<div class="caja-yr-panel"><h3>⚠️ No se pudo cargar ${label}</h3><p>Conectá el Google Drive en Cowork para ver los datos en vivo.</p><a class="drive-link" href="https://docs.google.com/spreadsheets/d/${fileId}" target="_blank">📊 Abrir ${label} en Drive</a></div>`;
+    content.innerHTML=`<div class="caja-yr-panel"><h3>⚠️ No se pudo cargar ${label}</h3><p>${e.message||'Revisá que la planilla esté compartida como "Cualquiera con el enlace".'}</p><a class="drive-link" href="https://docs.google.com/spreadsheets/d/${fileId}" target="_blank">📊 Abrir ${label} en Drive</a></div>`;
   }
 }
 
@@ -1227,23 +1224,27 @@ function renderCajaDashboard(d){
 async function loadUltimoMesCerrado(){
   document.getElementById('cajaDashBadge').textContent=ULTIMO_MES.label;
   try{
-    if(typeof window.cowork==='undefined'||!window.cowork.callMcpTool)throw new Error('no cowork');
-    const result=await window.cowork.callMcpTool('mcp__e6d1f0ad-044d-45ff-a09d-e22937a9f561__read_file_content',{fileId:ULTIMO_MES.fileId});
-    const text=typeof result==='string'?result:(result?.content||result?.text||JSON.stringify(result));
-    const parsed=parseCajaMD(text);
+    const rows=await fetchSheetCSV(ULTIMO_MES.fileId);
+    const p=parseCajaCSV(rows);
+    const ingOp=p.entradasReales!==null?p.entradasReales:FALLBACK_ABR26.ingOp;
+    const salidas=p.salidasReales!==null?p.salidasReales:FALLBACK_ABR26.salidas;
     renderCajaDashboard({
       ...FALLBACK_ABR26,
-      santander:parsed.santander||FALLBACK_ABR26.santander,
-      bbva8:parsed.bbva8||FALLBACK_ABR26.bbva8,
-      efectivo:parsed.efectivo||FALLBACK_ABR26.efectivo,
-      mp:parsed.mp||FALLBACK_ABR26.mp,
-      saldoCaja:parsed.saldoActual||FALLBACK_ABR26.saldoCaja
+      ingOp,salidas,
+      resultado:(p.entradasReales!==null&&p.salidasReales!==null)?(ingOp-salidas):FALLBACK_ABR26.resultado,
+      fciRescate:p.rescateFCI||FALLBACK_ABR26.fciRescate,
+      aFondo:p.invFondo!==null?p.invFondo:FALLBACK_ABR26.aFondo,
+      santander:p.santander||FALLBACK_ABR26.santander,
+      bbva8:p.bbva8||FALLBACK_ABR26.bbva8,
+      efectivo:p.efectivo||FALLBACK_ABR26.efectivo,
+      mp:p.mp!==null?p.mp:FALLBACK_ABR26.mp,
+      saldoCaja:p.saldoActual!==null?p.saldoActual:FALLBACK_ABR26.saldoCaja
     });
-    document.getElementById('cajaDashSync').textContent='🟢 Datos en vivo';
+    document.getElementById('cajaDashSync').textContent='🟢 Datos en vivo · Google Sheets';
     document.getElementById('cajaDashSync').style.color='#16a34a';
   }catch(e){
     renderCajaDashboard(FALLBACK_ABR26);
-    document.getElementById('cajaDashSync').textContent='📋 Datos al 31/5/2026';
+    document.getElementById('cajaDashSync').textContent='📋 Datos al 31/5/2026 (sin conexión)';
     document.getElementById('cajaDashSync').style.color='#94a3b8';
   }
 }
