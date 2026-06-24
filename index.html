@@ -630,29 +630,28 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   <div class="sec-top-icon">🏫</div>
   <div class="sec-top-text">
     <div class="sec-top-title">Red de Sedes · Estado 2026</div>
-    <div class="sec-top-sub">Inscriptos, activos y estado de pago · Bimestre ABR-MAY 2026</div>
+    <div class="sec-top-sub">Inscriptos y activos por bimestre · JUN-JUL en curso</div>
   </div>
   <div class="sec-top-right">
-    <span class="badge" style="background:#0ea5e9;">15 sedes activas</span>
-    <button class="refresh-btn" onclick="refreshSection('sedes',this)" title="Pedirle a Claude que actualice la Red de Sedes">🔄 Actualizar Sedes</button>
+    <span class="fci-sync" id="sedesSyncLbl">⏳ Cargando...</span>
+    <button class="refresh-btn" onclick="loadSedes26(this)" title="Recargar Resumen Sedes 2026 desde Drive">🔄 Actualizar Sedes</button>
   </div>
 </div>
 
 <div class="insight-bar red">
   <span class="ins-label">⚠️ Alerta</span>
-  <strong>12 de 13 sedes con deuda</strong> · Inscriptos 2026: 409 (−25% vs 2025) · Alumnos activos ABR-MAY: <strong>936 vs 1.106 en 2025 (−15%)</strong> · Solo Escobar al día en los 3 primeros bimestres · 7 sedes deben todos los bimestres
+  <strong>Estado de pago: ver planilla "Cuenta Corriente Centros"</strong> · Inscriptos 2026: <span id="sedesInsNuevos">409</span> · Alumnos activos: <span id="sedesInsActivos">936</span> — deuda por sede no disponible en vivo todavía
 </div>
 <div class="kpi-grid-4" style="margin-bottom:12px;">
-  <div class="kpi s"><div class="kpi-lbl">Inscriptos nuevos 2026</div><div class="kpi-val sky">409</div><div class="kpi-diff neg">▼ −140 vs 2025 (−25%)</div><div class="kpi-sub">3 bimestres · DIC→MAY</div></div>
-  <div class="kpi b"><div class="kpi-lbl">Alumnos activos ABR-MAY</div><div class="kpi-val">936</div><div class="kpi-diff neg">▼ −170 vs 2025 (−15%)</div><div class="kpi-sub">Vs 1.106 en ABR-MAY 2025</div></div>
-  <div class="kpi r"><div class="kpi-lbl">Sedes con deuda</div><div class="kpi-val neg">12/13</div><div class="kpi-sub">Con al menos 1 bimestre impago</div></div>
-  <div class="kpi g"><div class="kpi-lbl">Mejor bimestre 2026</div><div class="kpi-val pos">232</div><div class="kpi-sub">ABR-MAY · 77% vs 2025 (301) · mejor bimestre</div></div>
+  <div class="kpi s"><div class="kpi-lbl">Inscriptos nuevos 2026</div><div class="kpi-val sky" id="kpiInscriptos">409</div><div class="kpi-diff neg" id="kpiInscriptosDiff">▼ −140 vs 2025 (−25%)</div><div class="kpi-sub" id="kpiInscriptosSub">3 bimestres cerrados</div></div>
+  <div class="kpi b"><div class="kpi-lbl">Alumnos activos último bimestre</div><div class="kpi-val" id="kpiActivos">936</div><div class="kpi-diff neg" id="kpiActivosDiff">▼ −170 vs 2025 (−15%)</div><div class="kpi-sub" id="kpiActivosSub">Vs 1.106 en 2025</div></div>
+  <div class="kpi r"><div class="kpi-lbl">Sedes con deuda</div><div class="kpi-val neg">12/13</div><div class="kpi-sub">Dato manual · ver Cuenta Corriente Centros</div></div>
+  <div class="kpi g"><div class="kpi-lbl">Sedes y CADs activos</div><div class="kpi-val pos" id="kpiCantSedes">15</div><div class="kpi-sub" id="kpiCantSedesSub">Con inscriptos registrados en 2026</div></div>
 </div>
 
 <div class="alerts" style="margin-bottom:14px;">
-  <div class="alert sky">📊 <strong>Tendencia:</strong> La brecha con 2025 se reduce bimestre a bimestre. La recuperación es real pero incompleta.</div>
-  <div class="alert grn">✅ <strong>Al día:</strong> Escobar es la única sede al corriente en B1-B3. San Miguel debe desde B4.</div>
-  <div class="alert red">⚠️ <strong>Deuda crítica:</strong> Virtual, Concepción, Lanús, San Isidro, Santa Fe, Rosario y CADs deben los 3 bimestres (B1+B2+B3). Barrio Norte debe desde B2.</div>
+  <div class="alert sky">📊 <strong>Nuevas sedes/CADs detectadas:</strong> "Resumen Sedes 2026" ahora incluye CAD Morón, Aysa, Terminal Zárate y Buco, que no estaban en versiones anteriores del panel.</div>
+  <div class="alert grn">💡 <strong>Estado de pago:</strong> el detalle de deuda por sede vive en la planilla "Cuenta Corriente Centros" (organizada por bimestre) — todavía no está conectada en vivo a esta vista.</div>
 </div>
 
 <div class="row col2" style="margin-bottom:14px;">
@@ -668,8 +667,8 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 
 <div class="tbl-card">
   <div class="tbl-hdr">
-    <div class="tbl-title">Sedes · Nuevos, activos y estado de pago · 2026</div>
-    <div class="tbl-note">🟢=Al día · 🔴=Debe · ⚪=Sin datos</div>
+    <div class="tbl-title">Sedes · Nuevos y activos por bimestre · 2026</div>
+    <div class="tbl-note">Estado de pago: ver planilla "Cuenta Corriente Centros" (no incluido en esta vista en vivo)</div>
   </div>
   <div class="tbl-wrap"><table id="tableSedes26"></table></div>
 </div>
@@ -1316,24 +1315,25 @@ const D={
   bach:{m:['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV'],ol:[6660000,4560000,4140000,8784000,7560000,4197600,0,8840000,6800000,9165000,5400000],ef:[1404180,3594600,2988000,3686400,3484800,1772640,1829520,5194682,4236536,3673650,3074500],sd:[20009265,25138060,21700645,38934882,29469474,44484628,35268970,39275795,29711140,35993727,29489305]}
 };
 
-// ════════════ SEDES 2026 DATA ════════════
-const SEDES26=[
-  {n:'Virtual',pct:50,de_n:13,de_a:112,fm_n:36,fm_a:132,am_n:35,am_a:134,pago:[0,0,0],de_esba:4882933,fm_esba:5587643},
-  {n:'Escobar',pct:50,de_n:10,de_a:106,fm_n:17,fm_a:96,am_n:21,am_a:109,pago:[1,1,1],de_esba:4377283,fm_esba:4467569},
-  {n:'Olivos',pct:null,de_n:5,de_a:110,fm_n:4,fm_a:110,am_n:10,am_a:72,pago:null,de_esba:null,fm_esba:null},
-  {n:'San Isidro',pct:50,de_n:3,de_a:69,fm_n:0,fm_a:53,am_n:40,am_a:95,pago:[0,0,0],de_esba:3181920,fm_esba:2959923},
-  {n:'San Miguel',pct:50,de_n:5,de_a:61,fm_n:9,fm_a:62,am_n:33,am_a:81,pago:[1,1,1],de_esba:2655058,fm_esba:3034617},
-  {n:'Barrio Norte',pct:57.5,de_n:4,de_a:63,fm_n:1,fm_a:64,am_n:31,am_a:76,pago:[1,0,0],de_esba:4299709,fm_esba:3911409},
-  {n:'Concepción',pct:57.5,de_n:0,de_a:71,fm_n:13,fm_a:71,am_n:12,am_a:71,pago:[0,0,0],de_esba:2984472,fm_esba:3020998},
-  {n:'Mar del Plata',pct:null,de_n:1,de_a:49,fm_n:21,fm_a:92,am_n:null,am_a:67,pago:null,de_esba:null,fm_esba:null},
-  {n:'Santa Fe',pct:67.5,de_n:5,de_a:27,fm_n:10,fm_a:30,am_n:9,am_a:30,pago:[0,0,0],de_esba:2293481,fm_esba:2594014},
-  {n:'Rosario',pct:55,de_n:0,de_a:36,fm_n:4,fm_a:34,am_n:11,am_a:39,pago:[0,0,0],de_esba:1949661,fm_esba:1901785},
-  {n:'Pilar',pct:55,de_n:3,de_a:49,fm_n:6,fm_a:41,am_n:6,am_a:39,pago:[1,1,0],de_esba:3119459,fm_esba:3794287},
-  {n:'Lanús',pct:62.5,de_n:0,de_a:43,fm_n:1,fm_a:38,am_n:12,am_a:47,pago:[0,0,0],de_esba:2645782,fm_esba:3037394},
-  {n:'CADs',pct:60,de_n:2,de_a:12,fm_n:2,fm_a:10,am_n:9,am_a:19,pago:[0,0,0],de_esba:525456,fm_esba:768186},
-  {n:'Paraná',pct:67.5,de_n:2,de_a:27,fm_n:0,fm_a:21,am_n:1,am_a:21,pago:[1,0,0],de_esba:2066994,fm_esba:1923489},
-  {n:'Potenciar',pct:60,de_n:0,de_a:10,fm_n:0,fm_a:9,am_n:0,am_a:9,pago:[1,0,0],de_esba:498960,fm_esba:551736}
+// ════════════ SEDES 2026 (fallback si falla la conexión a Sheets) ════════════
+const FALLBACK_SEDES26=[
+  {n:'Virtual',b1n:13,b1a:112,b2n:36,b2a:132,b3n:35,b3a:134,b4n:null,b4a:null},
+  {n:'Escobar',b1n:10,b1a:106,b2n:17,b2a:96,b3n:21,b3a:109,b4n:null,b4a:null},
+  {n:'Olivos',b1n:5,b1a:110,b2n:4,b2a:110,b3n:10,b3a:72,b4n:null,b4a:null},
+  {n:'San Isidro',b1n:3,b1a:69,b2n:0,b2a:53,b3n:40,b3a:95,b4n:null,b4a:null},
+  {n:'San Miguel',b1n:5,b1a:61,b2n:9,b2a:62,b3n:33,b3a:81,b4n:null,b4a:null},
+  {n:'Barrio Norte',b1n:4,b1a:63,b2n:1,b2a:64,b3n:31,b3a:76,b4n:null,b4a:null},
+  {n:'Concepción',b1n:0,b1a:71,b2n:13,b2a:71,b3n:12,b3a:71,b4n:null,b4a:null},
+  {n:'Mar del Plata',b1n:1,b1a:49,b2n:21,b2a:92,b3n:null,b3a:67,b4n:null,b4a:null},
+  {n:'Santa Fe',b1n:5,b1a:27,b2n:10,b2a:30,b3n:9,b3a:30,b4n:null,b4a:null},
+  {n:'Rosario',b1n:0,b1a:36,b2n:4,b2a:34,b3n:11,b3a:39,b4n:null,b4a:null},
+  {n:'Pilar',b1n:3,b1a:49,b2n:6,b2a:41,b3n:6,b3a:39,b4n:null,b4a:null},
+  {n:'Lanús',b1n:0,b1a:43,b2n:1,b2a:38,b3n:12,b3a:47,b4n:null,b4a:null},
+  {n:'CADs',b1n:2,b1a:12,b2n:2,b2a:10,b3n:9,b3a:19,b4n:null,b4a:null},
+  {n:'Paraná',b1n:2,b1a:27,b2n:0,b2a:21,b3n:1,b3a:21,b4n:null,b4a:null},
+  {n:'Potenciar',b1n:0,b1a:10,b2n:0,b2a:9,b3n:0,b3a:9,b4n:null,b4a:null}
 ];
+const FALLBACK_SEDES_Y2025={b1n:73,b1a:1011,b2n:175,b2a:976,b3n:301,b3a:1106,b4n:114,b4a:1046};
 
 const ADS={
   meses:["MAR'25","ABR'25","MAY'25","JUN'25","ENE'26","FEB'26","MAR'26"],
@@ -1385,30 +1385,89 @@ new Chart(document.getElementById('chartOlivos'),{type:'bar',data:{labels:D.bach
   t.innerHTML=h;
 })();
 
-// ════════════ SEDES 2026 CHARTS ════════════
-new Chart(document.getElementById('chartBimNuevos'),{type:'bar',data:{labels:['DIC-ENE','FEB-MAR','ABR-MAY'],datasets:[{label:'2025',data:[73,175,301],backgroundColor:'rgba(148,163,184,0.5)',borderColor:'#94a3b8',borderWidth:1.5,borderRadius:4},{label:'2026',data:[53,124,230],backgroundColor:'rgba(14,165,233,0.75)',borderColor:'#0284c7',borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{padding:10,usePointStyle:true}}},scales:{x:{grid:{color:gc},border:{color:bc}},y:{grid:{color:gc},border:{color:bc}}}}});
+// ════════════ SEDES 2026 · CHARTS + TABLA (live desde "Resumen Sedes 2026") ════════════
+let chartBimNuevos=null,chartBimActivos=null;
+function renderSedesSection(sedes,y2025){
+  const BIM_LABELS=['DIC-ENE','FEB-MAR','ABR-MAY','JUN-JUL*'];
+  const sum=k=>sedes.reduce((s,x)=>s+(x[k]||0),0);
+  const n2026=[sum('b1n'),sum('b2n'),sum('b3n'),sum('b4n')];
+  const a2026=[sum('b1a'),sum('b2a'),sum('b3a'),sum('b4a')];
+  const n2025=y2025?[y2025.b1n,y2025.b2n,y2025.b3n,y2025.b4n]:[null,null,null,null];
+  const a2025=y2025?[y2025.b1a,y2025.b2a,y2025.b3a,y2025.b4a]:[null,null,null,null];
 
-new Chart(document.getElementById('chartBimActivos'),{type:'bar',data:{labels:['DIC-ENE','FEB-MAR','ABR-MAY'],datasets:[{label:'2025',data:[1011,976,1106],backgroundColor:'rgba(148,163,184,0.5)',borderColor:'#94a3b8',borderWidth:1.5,borderRadius:4},{label:'2026',data:[858,884,935],backgroundColor:'rgba(59,130,246,0.7)',borderColor:'#2563eb',borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{padding:10,usePointStyle:true}}},scales:{x:{grid:{color:gc},border:{color:bc}},y:{grid:{color:gc},border:{color:bc},min:600}}}});
+  if(chartBimNuevos)chartBimNuevos.destroy();
+  if(chartBimActivos)chartBimActivos.destroy();
+  chartBimNuevos=new Chart(document.getElementById('chartBimNuevos'),{type:'bar',data:{labels:BIM_LABELS,datasets:[
+    {label:'2025',data:n2025,backgroundColor:'rgba(148,163,184,0.5)',borderColor:'#94a3b8',borderWidth:1.5,borderRadius:4},
+    {label:'2026',data:n2026,backgroundColor:'rgba(14,165,233,0.75)',borderColor:'#0284c7',borderWidth:1.5,borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{padding:10,usePointStyle:true}}},scales:{x:{grid:{color:gc},border:{color:bc}},y:{grid:{color:gc},border:{color:bc}}}}});
 
-// ════════════ TABLE SEDES 2026 ════════════
-(()=>{
+  chartBimActivos=new Chart(document.getElementById('chartBimActivos'),{type:'bar',data:{labels:BIM_LABELS,datasets:[
+    {label:'2025',data:a2025,backgroundColor:'rgba(148,163,184,0.5)',borderColor:'#94a3b8',borderWidth:1.5,borderRadius:4},
+    {label:'2026',data:a2026,backgroundColor:'rgba(59,130,246,0.7)',borderColor:'#2563eb',borderWidth:1.5,borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{padding:10,usePointStyle:true}}},scales:{x:{grid:{color:gc},border:{color:bc}},y:{grid:{color:gc},border:{color:bc}}}}});
+
   const t=document.getElementById('tableSedes26');
-  const pagoTag=(p,i)=>{if(p===null)return`<span class="dot dot-k"></span>`;if(p[i]===1)return`<span class="dot dot-g"></span>`;return`<span class="dot dot-r"></span>`;};
-  const pagoStatus=(p)=>{if(p===null)return`<span class="tag tag-gr">S/D</span>`;const ok=p.reduce((a,b)=>a+b,0);if(ok===3)return`<span class="tag tag-g">Al día</span>`;if(ok===0)return`<span class="tag tag-r">Debe 3</span>`;if(ok===2)return`<span class="tag tag-y">Debe 1</span>`;return`<span class="tag tag-y">Parcial</span>`;};
-  let h=`<thead><tr><th rowspan="2">Sede</th><th class="tc" rowspan="2">% ESBA</th><th class="tc grp" colspan="2">DIC-ENE</th><th class="tc grp" colspan="2">FEB-MAR</th><th class="tc grp" colspan="2">ABR-MAY</th><th class="tr" rowspan="2">Total</th><th class="tc" rowspan="2">Estado pago</th><th class="tr" rowspan="2">Ingreso ESBA<br><span style="font-size:0.58rem;font-weight:400;color:#cbd5e1">D-E + F-M</span></th></tr><tr><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th></tr></thead><tbody>`;
-  const sorted=[...SEDES26].sort((a,b)=>(b.de_n+b.fm_n+(b.am_n||0))-(a.de_n+a.fm_n+(a.am_n||0)));
-  let tDE_n=0,tFM_n=0,tAM_n=0,tDE_e=0,tFM_e=0;
+  const dash=v=>(v===null||v===undefined)?'—':v;
+  let h=`<thead><tr><th rowspan="2">Sede</th><th class="tc grp" colspan="2">DIC-ENE</th><th class="tc grp" colspan="2">FEB-MAR</th><th class="tc grp" colspan="2">ABR-MAY</th><th class="tc grp" colspan="2">JUN-JUL*</th><th class="tr" rowspan="2">Total cerrado</th></tr><tr><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th></tr></thead><tbody>`;
+  const sorted=[...sedes].sort((a,b)=>((b.b1n||0)+(b.b2n||0)+(b.b3n||0)+(b.b4n||0))-((a.b1n||0)+(a.b2n||0)+(a.b3n||0)+(a.b4n||0)));
+  let t1n=0,t1a=0,t2n=0,t2a=0,t3n=0,t3a=0,t4n=0,t4a=0;
   sorted.forEach(s=>{
-    const tot=(s.de_n||0)+(s.fm_n||0)+(s.am_n||0);
-    tDE_n+=s.de_n||0;tFM_n+=s.fm_n||0;tAM_n+=s.am_n||0;
-    if(s.de_esba)tDE_e+=s.de_esba;if(s.fm_esba)tFM_e+=s.fm_esba;
-    const esbaT=s.de_esba&&s.fm_esba?`<span class="num-s">${f(s.de_esba+s.fm_esba)}</span>`:'<span style="color:#94a3b8">—</span>';
-    h+=`<tr><td class="bold">${s.n}</td><td class="tc" style="color:#64748b;font-size:0.76rem">${s.pct!==null?s.pct+'%':'—'}</td><td class="tc num-s">${s.de_n}</td><td class="tc">${s.de_a}</td><td class="tc num-s">${s.fm_n}</td><td class="tc">${s.fm_a}</td><td class="tc num-s">${s.am_n!==null&&s.am_n!==undefined?s.am_n:'—'}</td><td class="tc">${s.am_a||'—'}</td><td class="tr bold">${tot}</td><td class="tc">${pagoTag(s.pago,0)} ${pagoTag(s.pago,1)} ${pagoTag(s.pago,2)} ${pagoStatus(s.pago)}</td><td class="tr">${esbaT}</td></tr>`;
+    const tot=(s.b1n||0)+(s.b2n||0)+(s.b3n||0);
+    t1n+=s.b1n||0;t1a+=s.b1a||0;t2n+=s.b2n||0;t2a+=s.b2a||0;t3n+=s.b3n||0;t3a+=s.b3a||0;t4n+=s.b4n||0;t4a+=s.b4a||0;
+    h+=`<tr><td class="bold">${s.n}</td><td class="tc num-s">${dash(s.b1n)}</td><td class="tc">${dash(s.b1a)}</td><td class="tc num-s">${dash(s.b2n)}</td><td class="tc">${dash(s.b2a)}</td><td class="tc num-s">${dash(s.b3n)}</td><td class="tc">${dash(s.b3a)}</td><td class="tc num-s">${dash(s.b4n)}</td><td class="tc">${dash(s.b4a)}</td><td class="tr bold">${tot}</td></tr>`;
   });
-  const tTot=tDE_n+tFM_n+tAM_n;
-  h+=`</tbody><tfoot><tr><td>TOTAL 2026</td><td></td><td class="tc num-s bold">${tDE_n}</td><td class="tc bold">858</td><td class="tc num-s bold">${tFM_n}</td><td class="tc bold">884</td><td class="tc num-s bold">${tAM_n}</td><td class="tc bold">935</td><td class="tr bold">${tTot}</td><td class="tc" style="color:#94a3b8;font-size:0.66rem">2 al día</td><td class="tr num-s bold">${f(tDE_e+tFM_e)}</td></tr></tfoot>`;
+  h+=`</tbody><tfoot><tr><td>TOTAL 2026</td><td class="tc num-s bold">${t1n}</td><td class="tc bold">${t1a}</td><td class="tc num-s bold">${t2n}</td><td class="tc bold">${t2a}</td><td class="tc num-s bold">${t3n}</td><td class="tc bold">${t3a}</td><td class="tc num-s bold">${t4n||'—'}</td><td class="tc bold">${t4a||'—'}</td><td class="tr bold">${t1n+t2n+t3n}</td></tr></tfoot>`;
   t.innerHTML=h;
-})();
+
+  const nuevosCerrados=n2026[0]+n2026[1]+n2026[2];
+  const nuevos2025Cerrados=(n2025[0]||0)+(n2025[1]||0)+(n2025[2]||0);
+  document.getElementById('sedesInsNuevos').textContent=nuevosCerrados.toLocaleString('es-AR');
+  document.getElementById('kpiInscriptos').textContent=nuevosCerrados.toLocaleString('es-AR');
+  if(nuevos2025Cerrados){
+    const diffN=nuevosCerrados-nuevos2025Cerrados,pctN=Math.round(diffN/nuevos2025Cerrados*100);
+    const elD=document.getElementById('kpiInscriptosDiff');
+    elD.innerHTML=(diffN>=0?'▲ +':'▼ −')+Math.abs(diffN).toLocaleString('es-AR')+' vs 2025 ('+(pctN>=0?'+':'')+pctN+'%)';
+    elD.className='kpi-diff '+(diffN>=0?'pos':'neg');
+  }
+
+  const activosUltimo=a2026[2],activos2025Mismo=a2025[2];
+  document.getElementById('sedesInsActivos').textContent=activosUltimo.toLocaleString('es-AR');
+  document.getElementById('kpiActivos').textContent=activosUltimo.toLocaleString('es-AR');
+  if(activos2025Mismo){
+    const diffA=activosUltimo-activos2025Mismo,pctA=Math.round(diffA/activos2025Mismo*100);
+    const elA=document.getElementById('kpiActivosDiff');
+    elA.innerHTML=(diffA>=0?'▲ +':'▼ −')+Math.abs(diffA).toLocaleString('es-AR')+' vs 2025 ('+(pctA>=0?'+':'')+pctA+'%)';
+    elA.className='kpi-diff '+(diffA>=0?'pos':'neg');
+    document.getElementById('kpiActivosSub').textContent='Vs '+activos2025Mismo.toLocaleString('es-AR')+' en ABR-MAY 2025';
+  }
+  document.getElementById('kpiCantSedes').textContent=sedes.length;
+}
+
+async function loadSedes26(btn){
+  const syncLbl=document.getElementById('sedesSyncLbl');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">⏳</span> Cargando...';}
+  try{
+    const rows=await fetchSheetCSV('1OGt8aL8jtRNwkBIBVqg1vRU93wdqPYmfWMduH7DgVio');
+    const num=v=>{const n=parseInt((v||'').replace(/[^\d-]/g,''),10);return isNaN(n)?null:n;};
+    const sedes=[];let y2025=null;
+    for(const r of rows){
+      const rank=(r[0]||'').trim(),name=(r[1]||'').trim();
+      if(!name)continue;
+      if(/^2025$/.test(name)){y2025={b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9])};continue;}
+      if(!/^\d+$/.test(rank))continue;
+      sedes.push({n:name,b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9])});
+    }
+    if(sedes.length<5)throw new Error('parse failed');
+    renderSedesSection(sedes,y2025||FALLBACK_SEDES_Y2025);
+    syncLbl.textContent='🟢 Datos en vivo · Google Sheets';syncLbl.classList.add('live');
+  }catch(e){
+    renderSedesSection(FALLBACK_SEDES26,FALLBACK_SEDES_Y2025);
+    syncLbl.textContent='📋 Datos al 18/5/2026 (sin conexión)';syncLbl.classList.remove('live');
+  }
+  if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualizar Sedes';}
+}
+loadSedes26();
 
 // ════════════ TABLE CURSOS ════════════
 (()=>{
