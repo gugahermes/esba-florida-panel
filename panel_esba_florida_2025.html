@@ -324,7 +324,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <div class="sb-item" onclick="sbNav('sec-financiero',this)">Cierre 2025</div>
     <div class="sb-section">Operativo</div>
     <div class="sb-item sb-warn" onclick="sbNav('sec-sedes',this)">Red de Sedes<span class="sb-badge alert">10⚠</span></div>
-    <div class="sb-item" onclick="sbNav('sec-publicidad',this)">Publicidad</div>
+    <div class="sb-item" onclick="sbNav('sec-publicidad',this)">Marketing y Ventas</div>
     <div class="sb-item" onclick="sbNav('sec-simulador',this)">Simulador</div>
   </div>
   <div class="sb-footer">
@@ -753,8 +753,8 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 <div class="sec-top pub-hdr">
   <div class="sec-top-icon">📢</div>
   <div class="sec-top-text">
-    <div class="sec-top-title">Publicidad · Adquisición digital</div>
-    <div class="sec-top-sub">Métricas Meta + Google · Mar 2025 – Mar 2026 · Agencia Achalay</div>
+    <div class="sec-top-title">Marketing y Ventas · Adquisición digital</div>
+    <div class="sec-top-sub">Meta Ads (7 cuentas ESBA) · histórico CPI/inscriptos vía Achalay</div>
   </div>
   <div class="sec-top-right">
     <span class="badge" style="background:#f97316;">7 meses datos</span>
@@ -765,15 +765,39 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   <span class="ins-label">💡 Dato clave</span>
   MAR 2026: mejor mes del año — <strong>144 inscriptos · CPI $19.763</strong> · Meta genera &gt;80% leads a CPL $810 vs Google $4.800 · Sin acceso API directo: datos vía agencia Achalay (retraso 1 mes) · <strong>Riesgo:</strong> concentración 100% en Meta sin alternativa
 </div>
-<!-- ═══ META ADS LIVE ═══ -->
+<!-- ═══ META ADS · SNAPSHOT REAL (7 cuentas) ═══ -->
 <div class="meta-live-bar">
-  <div class="meta-live-dot"></div>
-  Meta Ads API · ESBA San Isidro &amp; San Fernando · MAY 2026 live
-  <span id="metaLastUpdate" style="color:#94a3b8;font-weight:400;font-size:0.67rem;margin-left:2px;"></span>
-  <button class="meta-live-cta" id="btnMetaRefresh" onclick="loadMetaAds(this)">↻ Actualizar Meta Ads</button>
+  <div class="meta-live-dot" style="background:#94a3b8;animation:none;"></div>
+  Meta Ads · 7 cuentas ESBA · últimos 30 días (25/5–23/6/2026)
+  <span style="color:#94a3b8;font-weight:400;font-size:0.67rem;margin-left:2px;">Snapshot traído por Claude el 24/6/2026 — no se actualiza solo, pedímelo cuando lo necesites</span>
 </div>
-<div id="metaAdsBody"><div class="meta-loading">⏳ Cargando datos Meta Ads...</div></div>
-<div class="meta-sublabel">Histórico · Agencia Achalay</div>
+<div class="kpi-grid-4" style="margin-bottom:12px;">
+  <div class="kpi o"><div class="kpi-lbl">Invertido (30 días, 7 cuentas)</div><div class="kpi-val ora">$2.39M</div><div class="kpi-sub">ARS · todas las sedes con cuenta Meta</div></div>
+  <div class="kpi p"><div class="kpi-lbl">Impresiones</div><div class="kpi-val" style="color:#7c3aed">1.14M</div><div class="kpi-sub">Alcance 533k personas únicas</div></div>
+  <div class="kpi b"><div class="kpi-lbl">CPM promedio ponderado</div><div class="kpi-val">$2.085</div><div class="kpi-sub">Rango: $1.237–$2.689</div></div>
+  <div class="kpi g"><div class="kpi-lbl">Clicks</div><div class="kpi-val pos">15.861</div><div class="kpi-sub">CTR promedio 1,39%</div></div>
+</div>
+<div class="tbl-card" style="margin-bottom:14px;">
+  <div class="tbl-hdr">
+    <div class="tbl-title">Meta Ads por cuenta · últimos 30 días</div>
+    <div class="tbl-note">25/5 – 23/6/2026 · Fuente: Meta Ads API vía Claude</div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Cuenta</th><th class="tr">Invertido</th><th class="tr">Impresiones</th><th class="tr">Alcance</th><th class="tr">CPM</th><th class="tc">CTR</th><th class="tr">Clicks</th></tr></thead>
+    <tbody>
+      <tr><td class="bold">ESBA Sede Olivos</td><td class="tr num-o">$794.087</td><td class="tr">362.074</td><td class="tr">170.751</td><td class="tr">$2.193</td><td class="tc">1,51%</td><td class="tr">5.451</td></tr>
+      <tr><td class="bold">ESBA Sede Virtual</td><td class="tr num-o">$781.569</td><td class="tr">388.353</td><td class="tr">206.217</td><td class="tr">$2.013</td><td class="tc">1,56%</td><td class="tr">6.044</td></tr>
+      <tr><td class="bold">ESBA Sede Pilar</td><td class="tr num-o">$344.912</td><td class="tr">128.249</td><td class="tr">64.786</td><td class="tr">$2.689</td><td class="tc">1,06%</td><td class="tr">1.358</td></tr>
+      <tr><td class="bold">ESBA San Isidro &amp; San Fernando</td><td class="tr num-o">$185.767</td><td class="tr">84.156</td><td class="tr">49.396</td><td class="tr">$2.207</td><td class="tc">1,14%</td><td class="tr">963</td></tr>
+      <tr><td class="bold">ESBA Sede Belgrano &amp; Lanús</td><td class="tr num-o">$156.219</td><td class="tr">81.830</td><td class="tr">39.568</td><td class="tr">$1.909</td><td class="tc">0,88%</td><td class="tr">722</td></tr>
+      <tr><td class="bold">ESBA Sede Santa Fe</td><td class="tr num-o">$123.268</td><td class="tr">99.682</td><td class="tr">64.104</td><td class="tr">$1.237</td><td class="tc">1,33%</td><td class="tr">1.323</td></tr>
+      <tr><td class="bold">ESBA Sede Paraná</td><td class="tr" style="color:#94a3b8">$0 · sin actividad</td><td class="tr">—</td><td class="tr">—</td><td class="tr">—</td><td class="tc">—</td><td class="tr">—</td></tr>
+    </tbody>
+    <tfoot><tr><td>TOTAL</td><td class="tr num-o bold">$2.385.822</td><td class="tr bold">1.144.344</td><td class="tr bold">≈533k únicos*</td><td class="tr bold">$2.085</td><td class="tc bold">1,39%</td><td class="tr bold">15.861</td></tr></tfoot>
+  </table></div>
+  <p style="font-size:11px;color:var(--text-3);padding:0 20px 14px;">*El alcance no se suma linealmente entre cuentas (puede haber personas alcanzadas por más de una). Sin dato de "resultados" (leads/inscriptos) por cuenta — el objetivo de optimización configurado en estas campañas no expone esa métrica vía API; el CPI/inscriptos de abajo sigue viniendo del reporte de Achalay.</p>
+</div>
+<div class="meta-sublabel">Histórico CPI/inscriptos · Agencia Achalay (Bachillerato)</div>
 <div class="kpi-grid-4" style="margin-bottom:12px;">
   <div class="kpi o"><div class="kpi-lbl">Total invertido (7 meses)</div><div class="kpi-val ora">$19.5M</div><div class="kpi-sub">Meta + Google</div></div>
   <div class="kpi p"><div class="kpi-lbl">Inscriptos vía publicidad</div><div class="kpi-val" style="color:#7c3aed">554</div><div class="kpi-sub">Canal casi exclusivo</div></div>
@@ -856,11 +880,11 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <div class="reach-sim-title">📡 Estimador de alcance · CPM live Meta Ads</div>
     <div class="reach-sim-inputs">
       <div><label>Presupuesto mensual (ARS)</label><input type="number" id="simBudget" value="2845833" oninput="updateReachSim()"></div>
-      <div><label>CPM objetivo (ARS) <span style="color:#1877f2;font-size:0.6rem;">↑ se actualiza desde Meta Ads</span></label><input type="number" id="simCPM" value="1600" oninput="updateReachSim()"></div>
+      <div><label>CPM objetivo (ARS) <span style="color:#94a3b8;font-size:0.6rem;">Real: $2.085 (30 días, 7 cuentas)</span></label><input type="number" id="simCPM" value="2085" oninput="updateReachSim()"></div>
       <div><label>CTR estimado (%) <span style="color:#94a3b8;font-size:0.6rem;">2–5% para WhatsApp</span></label><input type="number" id="simCTR" value="2.5" step="0.1" min="0.1" max="20" oninput="updateReachSim()"></div>
     </div>
     <div class="kpi-grid-4" id="reachSimOutput"></div>
-    <div class="reach-hint">CPM se actualiza automáticamente al abrir la sección Publicidad. Frecuencia asumida: 1.6x (promedio histórico campañas activas).</div>
+    <div class="reach-hint">CPM precargado con el real de los últimos 30 días (7 cuentas) — editalo a mano si querés simular otro escenario. Frecuencia asumida: 1.6x (promedio histórico campañas activas).</div>
   </div>
   <div style="margin-top:14px;background:#faf5ff;border:1px solid #ddd6fe;border-radius:8px;padding:12px 14px;">
     <div style="font-size:0.66rem;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">💡 Lectura estratégica</div>
@@ -871,7 +895,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 
 </div><!-- /wrap -->
 
-<div class="footer">ESBA Florida S.A. · Panel de gestión interna · FCI: Google Sheets · Caja: Drive mensual · Sedes: Drive 2026 · Publicidad: Achalay · Claude Cowork · 18 mayo 2026</div>
+<div class="footer">ESBA Florida S.A. · Panel de gestión interna · FCI/Caja/Sedes: Google Sheets en vivo · Marketing y Ventas: Meta Ads (snapshot) + Achalay · 24 junio 2026</div>
 
 </div><!-- /content-scroll -->
 </div><!-- /main-area -->
@@ -894,7 +918,7 @@ const SB_META={
   'sec-caja':      ['Caja Diaria · ESBA Florida',            'Movimientos y saldos bancarios · 2005–2026 · Live Drive'],
   'sec-financiero':['Financiero 2025 · Resultado anual',     'P&L completo · ENE–DIC 2025 · Año cerrado'],
   'sec-sedes':     ['Red de Sedes · Estado 2026',            'Inscriptos, activos y deuda · Bimestre ABR–MAY 2026'],
-  'sec-publicidad':['Publicidad · Adquisición digital',      'Métricas Meta + Google · Mar 2025–Mar 2026'],
+  'sec-publicidad':['Marketing y Ventas · Adquisición digital', 'Métricas Meta Ads (7 cuentas ESBA) + histórico Achalay'],
   'sec-simulador': ['Simulador de inscripción',              'Proyección anual por objetivo y CPI']
 };
 function sbNav(id, el){
@@ -1028,7 +1052,6 @@ async function loadFci(){
   }catch(e){renderFci(FALLBACK_FCI);syncLbl.textContent='📋 Datos al 2/6/2026 (sin conexión)';syncLbl.classList.remove('live');}
 }
 loadFci();
-loadMetaAds();
 updateReachSim();
 
 // ════════════ CAJA DIARIA ════════════
@@ -1628,127 +1651,6 @@ new Chart(document.getElementById('chartEgr26'),{type:'bar',data:{labels:D26.mes
 })();
 
 // ════════════ SIMULADOR ════════════
-// ════════════ META ADS LIVE ════════════
-const META_ADS_ACCOUNT='1193704641432940';
-const META_MCP='mcp__5c4eb7a3-30b4-44fc-bcb9-6df9192da7ea__ads_get_ad_entities';
-
-function maParseARS(str){
-  if(!str||str==='Not available')return null;
-  let s=str.replace(/[^\d.,]/g,'').trim();
-  s=s.replace(/\./g,'').replace(',','.');
-  return parseFloat(s)||0;
-}
-function maParseInt(str){
-  if(!str||str==='Not available')return 0;
-  return parseInt(str.replace(/\./g,'').replace(',','.'))||0;
-}
-function maShortName(n){
-  return n.replace('Meta | Vydra | Secundario acelerado | ','')
-          .replace('Vydra | Secundario acelerado | ','')
-          .replace('Meta | Vydra | ','')
-          .replace('Expansion | ','Exp · ')
-          .replace('RMKT | ','RMKT · ');
-}
-function maCPMSem(cpm){return cpm<1500?'sem-g':cpm<2000?'sem-y':'sem-r';}
-function maFreqPill(f){
-  if(f<1.8)return`<span class="fpill fpill-ok">${f.toFixed(2)}x</span>`;
-  if(f<2.3)return`<span class="fpill fpill-warn">${f.toFixed(2)}x ⚡</span>`;
-  return`<span class="fpill fpill-hot">${f.toFixed(2)}x 🔴</span>`;
-}
-
-async function loadMetaAds(btn){
-  const body=document.getElementById('metaAdsBody');
-  const upd=document.getElementById('metaLastUpdate');
-  const rb=btn||document.getElementById('btnMetaRefresh');
-  if(rb){rb.disabled=true;rb.textContent='Cargando...';}
-  body.innerHTML='<div class="meta-loading">⏳ Consultando Meta Ads API...</div>';
-  try{
-    if(typeof window.cowork==='undefined'||!window.cowork.callMcpTool)throw new Error('Cowork no disponible en este contexto.');
-    const now=new Date();
-    const since=new Date(now);since.setDate(since.getDate()-90);
-    const sinceStr=since.toISOString().split('T')[0];
-    const untilStr=now.toISOString().split('T')[0];
-    const result=await window.cowork.callMcpTool(META_MCP,{
-      ad_account_id:META_ADS_ACCOUNT,
-      level:'ad',
-      fields:['id','name','effective_status','impressions','frequency','cpm','amount_spent','reach'],
-      time_range:{since:sinceStr,until:untilStr},
-      filtering:[{field:'ad.effective_status',operator:'IN',value:['ACTIVE']}],
-      sort:'impressions_descending',
-      limit:20
-    });
-    const raw=typeof result.ad_entities==='string'?JSON.parse(result.ad_entities):result.ad_entities;
-    renderMetaAds(raw||[]);
-    if(upd)upd.textContent=`· ${now.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'})} ${now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}`;
-  }catch(e){
-    body.innerHTML=`<div class="meta-loading" style="color:#dc2626;">⚠️ No se pudo conectar con Meta Ads: ${e.message}<br><span style="font-size:0.7rem;color:#94a3b8;">El panel mostrará datos estáticos. Abrí el panel desde Claude Cowork para acceder al live feed.</span></div>`;
-  }
-  if(rb){rb.disabled=false;rb.textContent='↻ Actualizar Meta Ads';}
-}
-
-function renderMetaAds(ads){
-  const body=document.getElementById('metaAdsBody');
-  const active=ads.filter(a=>a.effective_status==='ACTIVE'&&maParseARS(a.amount_spent)>0);
-  if(!active.length){
-    body.innerHTML='<div class="meta-loading">Sin anuncios activos con gasto en el período.</div>';
-    return;
-  }
-  const totalSpend=active.reduce((s,a)=>s+(maParseARS(a.amount_spent)||0),0);
-  const totalImpr=active.reduce((s,a)=>s+maParseInt(a.impressions),0);
-  const totalReach=active.reduce((s,a)=>s+maParseInt(a.reach),0);
-  const avgCPM=totalImpr>0?Math.round(totalSpend/totalImpr*1000):0;
-  const avgFreq=totalReach>0?(totalImpr/totalReach):0;
-  const rmktSpend=active.filter(a=>a.name.includes('RMKT')).reduce((s,a)=>s+(maParseARS(a.amount_spent)||0),0);
-  const shareRMKT=totalSpend>0?Math.round(rmktSpend/totalSpend*100):0;
-  // alerts
-  const saturados=active.filter(a=>parseFloat((a.frequency||'0').replace(',','.')?.replace(/\./g,'').replace(',','.')??0)>=2.0);
-  const inefic=active.filter(a=>(maParseARS(a.cpm)||0)>=2000);
-  const winner=active[0];
-  // sorted by CPM asc
-  const sorted=[...active].sort((a,b)=>(maParseARS(a.cpm)||0)-(maParseARS(b.cpm)||0));
-  const cpmSemClass=c=>c<1500?'sem-g':c<2000?'sem-y':'sem-r';
-  let html=`
-    <div class="kpi-grid-4" style="margin-bottom:12px;">
-      <div class="kpi b"><div class="kpi-lbl">Gasto 90 días</div><div class="kpi-val">${f(Math.round(totalSpend))}</div><div class="kpi-sub">${active.length} creativos · ARS</div></div>
-      <div class="kpi p"><div class="kpi-lbl">Impresiones</div><div class="kpi-val" style="color:#7c3aed">${(totalImpr/1000).toFixed(0)}k</div><div class="kpi-sub">Alcance ${(totalReach/1000).toFixed(0)}k únicos</div></div>
-      <div class="kpi o"><div class="kpi-lbl">CPM promedio</div><div class="kpi-val ora">${f(avgCPM)}</div><div class="kpi-sub">Rango efectivo · ARS</div></div>
-      <div class="kpi ${avgFreq>=2.0?'r':'g'}"><div class="kpi-lbl">Frecuencia prom.</div><div class="kpi-val ${avgFreq>=2.0?'':'pos'}">${avgFreq.toFixed(2)}x</div><div class="kpi-sub">RMKT ${shareRMKT}% del gasto</div></div>
-    </div>
-    <div class="alerts" style="margin-bottom:12px;">
-      <div class="alert grn">🏆 <strong>Winner (Meta lo prioriza):</strong> "${maShortName(winner.name)}" — CPM ${winner.cpm} · ${winner.impressions} imp · freq ${winner.frequency}x</div>
-      ${saturados.length?`<div class="alert ora">⚡ <strong>Saturación (freq ≥2.0):</strong> ${saturados.map(a=>'"'+maShortName(a.name)+'"').join(', ')} — Rotar o pausar creativo.</div>`:''}
-      ${inefic.length?`<div class="alert red">⚠️ <strong>CPM alto (≥$2.000):</strong> ${inefic.map(a=>'"'+maShortName(a.name)+'"').join(', ')} — Revisar segmentación o creativo.</div>`:''}
-      ${shareRMKT>35?`<div class="alert red">🔄 <strong>RMKT sobrerepresentado:</strong> ${shareRMKT}% del presupuesto. Expandí el funnel de adquisición nueva.</div>`:'<div class="alert blu">✅ <strong>Mix RMKT/EXP:</strong> '+shareRMKT+'% en remarketing — distribución saludable.</div>'}
-    </div>
-    <div class="tbl-card">
-      <div class="tbl-hdr"><div class="tbl-title">Creativos activos · Ranking por CPM</div><div class="tbl-note">↓ menor CPM = mayor eficiencia · últimos 90 días · ESBA San Isidro &amp; San Fernando</div></div>
-      <div class="tbl-wrap"><table>
-        <thead><tr><th>#</th><th>Creativo</th><th class="tc">Tipo</th><th class="tr">Inversión</th><th class="tr">Impresiones</th><th class="tr">Alcance</th><th class="tc">Frecuencia</th><th class="tr">CPM</th><th class="tc">Señal</th></tr></thead>
-        <tbody>`;
-  sorted.forEach((ad,i)=>{
-    const cpm=maParseARS(ad.cpm)||0;
-    const freq=parseFloat((ad.frequency||'0').replace(',','.'));
-    const tipo=ad.name.includes('RMKT')?'<span class="tag tag-y">RMKT</span>':'<span class="tag tag-g">EXP</span>';
-    const cpmSignal=cpm<1500?'✅':cpm<2000?'⚡':'⚠️';
-    html+=`<tr>
-      <td class="tc bold">#${i+1}</td>
-      <td class="bold" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ad.name}">${maShortName(ad.name)}</td>
-      <td class="tc">${tipo}</td>
-      <td class="tr num-o">${ad.amount_spent||'—'}</td>
-      <td class="tr">${ad.impressions||'—'}</td>
-      <td class="tr">${ad.reach||'—'}</td>
-      <td class="tc">${maFreqPill(freq)}</td>
-      <td class="tr"><span class="${cpmSemClass(cpm)}">${ad.cpm||'—'}</span></td>
-      <td class="tc">${cpmSignal}</td>
-    </tr>`;
-  });
-  html+='</tbody></table></div></div>';
-  body.innerHTML=html;
-  // feed simulador CPM
-  const cpmInput=document.getElementById('simCPM');
-  if(cpmInput&&avgCPM>0){cpmInput.value=avgCPM;updateReachSim();}
-}
-
 function updateReachSim(){
   const budget=parseFloat(document.getElementById('simBudget')?.value)||0;
   const cpm=parseFloat(document.getElementById('simCPM')?.value)||1;
