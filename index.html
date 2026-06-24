@@ -6,7 +6,7 @@
 <title>ESBA Florida – Panel 2025–2026</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ── ESBA FLORIDA 2026 · APPLE-STYLE DESIGN SYSTEM ── */
 :root{
@@ -20,18 +20,21 @@
   --ok:#30d158; --ok-dark:#1c7a3a; --warn:#ff9f0a; --err:#ff453a;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text-1);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;font-size:13px;-webkit-font-smoothing:antialiased;}
-.brand-title{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;}
+body{background:var(--bg);color:var(--text-1);font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;-webkit-font-smoothing:antialiased;}
+.brand-title{font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;}
+.sec-top-title,.kpi-val,.kpi-val-xl{font-family:'IBM Plex Sans',-apple-system,sans-serif;}
 
 /* ── LAYOUT ── */
 .layout{display:flex;height:100vh;overflow:hidden;}
 
 /* ── SIDEBAR ── */
 .sidebar{width:210px;background:#1c1c1e;display:flex;flex-direction:column;flex-shrink:0;position:relative;z-index:50;}
-.sb-brand{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.sb-brand{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.sb-logo-card{background:#fff;border-radius:10px;padding:10px 12px;display:inline-block;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.sb-logo-card img{display:block;height:26px;width:auto;}
 .sb-logo{font-size:15px;font-weight:600;color:#fff;letter-spacing:-.3px;line-height:1;}
 .sb-logo span{color:var(--turquesa);}
-.sb-sub{font-size:10px;color:rgba(255,255,255,0.25);margin-top:4px;letter-spacing:.04em;}
+.sb-sub{font-size:10px;color:rgba(255,255,255,0.35);margin-top:9px;letter-spacing:.04em;}
 .sb-nav{flex:1;padding:10px 8px;overflow-y:auto;}
 .sb-nav::-webkit-scrollbar{display:none;}
 .sb-section{font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,0.2);padding:14px 10px 5px;font-weight:500;}
@@ -39,7 +42,8 @@ body{background:var(--bg);color:var(--text-1);font-family:-apple-system,BlinkMac
 .sb-item:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.75);}
 .sb-item.active{background:rgba(255,255,255,0.09);color:#fff;font-weight:500;}
 .sb-item::before{content:'';width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.12);flex-shrink:0;}
-.sb-item.active::before{background:var(--turquesa);}
+.sb-item.active::before{background:var(--rojo);}
+.sb-item.active{border-left:2px solid var(--rojo);padding-left:8px;}
 .sb-item.sb-warn::before{background:var(--err);}
 .sb-icon{display:none;}
 .sb-badge{margin-left:auto;font-size:11px;font-weight:500;}
@@ -140,6 +144,11 @@ body{background:var(--bg);color:var(--text-1);font-family:-apple-system,BlinkMac
 .col1{grid-template-columns:1fr;}.col2{grid-template-columns:1fr 1fr;}.col3{grid-template-columns:1.6fr 1fr 1fr;}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,0.07);border-radius:14px;padding:20px 22px;}
 .card-title{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.res-card{transition:box-shadow .15s,transform .15s;}
+.res-card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.1);transform:translateY(-1px);}
+.res-icon{display:inline-flex;width:18px;height:18px;margin-right:6px;vertical-align:middle;}
+.res-icon svg{width:100%;height:100%;}
+.res-title-row{display:flex;align-items:center;}
 .card-note{font-size:11px;color:var(--text-3);text-transform:none;letter-spacing:0;font-weight:400;}
 
 /* ── TABLES ── */
@@ -313,12 +322,14 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 <!-- ═══ SIDEBAR ═══ -->
 <div class="sidebar">
   <div class="sb-brand">
-    <div class="sb-logo">ESBA <span>Florida</span></div>
+    <div class="sb-logo-card"><img src="assets/logo-esba-florida.png" alt="ESBA Florida"></div>
     <div class="sb-sub">Panel de gestión · 2026</div>
   </div>
   <div class="sb-nav">
+    <div class="sb-section">Directorio</div>
+    <div class="sb-item active" onclick="sbNav('sec-resumen',this)">Resumen Ejecutivo</div>
     <div class="sb-section">Financiero</div>
-    <div class="sb-item active" onclick="sbNav('sec-fci',this)">FCI<span class="sb-badge ok">Live</span></div>
+    <div class="sb-item" onclick="sbNav('sec-fci',this)">FCI<span class="sb-badge ok">Live</span></div>
     <div class="sb-item" onclick="sbNav('sec-pl26',this)">P&L 2026</div>
     <div class="sb-item" onclick="sbNav('sec-caja',this)">Caja Diaria</div>
     <div class="sb-item" onclick="sbNav('sec-financiero',this)">Cierre 2025</div>
@@ -354,17 +365,6 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 
 <div class="content-scroll">
-
-<!-- GLOBAL ALERTS BAR -->
-<div class="gal-bar" id="galBar">
-  <span class="gal-bar-lbl">🚨 Alertas</span>
-  <span class="gal-sep">·</span>
-  <span class="gal-chip red">Alumnos pagos al día: dato ausente · brecha crítica</span>
-  <span class="gal-chip yel">JUN en curso al 2/6: entradas $14.1M · salidas $9.3M · $8M a FCI hoy</span>
-  <span class="gal-chip grn">FCI $140.6M al 1/6 · Cobertura ~4.3x sobre costo salarial</span>
-  <span class="gal-chip sky">Meta Ads API: rollout pendiente · datos por agencia</span>
-  <span class="gal-chip yel">MAY 2026 cerrado: resultado operativo +$16.1M · saldo $19.7M</span>
-</div>
 
 <!-- UPDATE MODAL -->
 <div class="modal" id="modal">
@@ -403,6 +403,46 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 
 <div class="wrap">
 
+<!-- ════════════════════════ RESUMEN EJECUTIVO ════════ -->
+<div id="sec-resumen" style="scroll-margin-top:90px;margin-top:0;">
+<div class="sec-top resumen-hdr">
+  <div class="sec-top-text">
+    <div class="sec-top-title">Resumen Ejecutivo · Directorio</div>
+    <div class="sec-top-sub">Caja, liquidez e inscriptos · vista para toma de decisiones</div>
+  </div>
+  <div class="sec-top-right">
+    <span class="fci-sync" id="resumenSyncLbl">⏳ Cargando...</span>
+    <button class="refresh-btn" onclick="loadResumenEjecutivo(this)" title="Recargar resumen ejecutivo">🔄 Actualizar</button>
+  </div>
+</div>
+
+<div class="row col3" style="margin-bottom:14px;">
+  <div class="card res-card" style="border-top:3px solid var(--azul);">
+    <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--azul)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="10" width="18" height="9" rx="1"/><path d="M3 10l9-6 9 6"/><line x1="3" y1="19" x2="21" y2="19"/></svg></span>Caja diaria</span><span class="card-note">mes en curso</span></div>
+    <div class="kpi-val-xl" id="resCajaSaldo">—</div>
+    <div class="kpi-sub" id="resCajaSub">Cargando...</div>
+    <button class="hbtn" style="margin-top:12px;" onclick="sbNav('sec-caja',null)">Ver detalle →</button>
+  </div>
+  <div class="card res-card" style="border-top:3px solid #d97706;">
+    <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:#d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg></span>Liquidez total</span><span class="card-note">Caja + FCI</span></div>
+    <div class="kpi-val-xl" id="resLiquidez">—</div>
+    <div class="kpi-sub" id="resLiquidezSub">Cargando...</div>
+    <button class="hbtn" style="margin-top:12px;" onclick="sbNav('sec-fci',null)">Ver detalle →</button>
+  </div>
+  <div class="card res-card" style="border-top:3px solid var(--rojo);">
+    <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--rojo)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg></span>Sedes e inscriptos</span><span class="card-note">2026</span></div>
+    <div class="kpi-val-xl" id="resInscriptos">—</div>
+    <div class="kpi-sub" id="resInscriptosSub">Cargando...</div>
+    <button class="hbtn" style="margin-top:12px;" onclick="sbNav('sec-sedes',null)">Ver detalle →</button>
+  </div>
+</div>
+<div class="insight-bar blue" id="resumenInsight">
+  <span class="ins-label">📌 Para el directorio</span>
+  Cargando datos en vivo...
+</div>
+</div>
+
+<div class="sec-divider"></div>
 <!-- ════════════════════════ FCI ════════ -->
 <div id="sec-fci" style="scroll-margin-top:90px;">
 <div class="sec-top fci-hdr">
@@ -911,6 +951,7 @@ function toggleExec(btn){
 
 // ════════════ SIDEBAR NAV ════════════
 const SB_META={
+  'sec-resumen':   ['Resumen Ejecutivo · Directorio',       'Caja, liquidez e inscriptos · vista para toma de decisiones'],
   'sec-fci':       ['FCI · Fondo Común de Inversión',       'Saldo, movimientos y rendimiento · Feb–May 2026'],
   'sec-pl26':      ['P&L 2026 · Resultado financiero',       'ENE–MAY 2026 · Cash basis · ARS corrientes'],
   'sec-caja':      ['Caja Diaria · ESBA Florida',            'Movimientos y saldos bancarios · 2005–2026 · Live Drive'],
@@ -942,7 +983,7 @@ function sbNav(id, el){
 function goTo(id,btn){sbNav(id,null);}
 
 // Auto-highlight sidebar on scroll
-const sections=['sec-fci','sec-pl26','sec-caja','sec-sedes','sec-financiero','sec-publicidad','sec-simulador'];
+const sections=['sec-resumen','sec-fci','sec-pl26','sec-caja','sec-financiero','sec-sedes','sec-publicidad','sec-simulador'];
 const sbItems=document.querySelectorAll('.sb-item');
 const scroller=document.querySelector('.content-scroll');
 if(scroller){
@@ -1031,26 +1072,81 @@ function parseARSCell(s){
   const v=parseFloat(s.replace(/[^0-9,.-]/g,'').replace(/\./g,'').replace(',','.'));
   return isNaN(v)?null:v;
 }
+async function fetchFciData(){
+  const rows=await fetchSheetCSV('1talroWiW1iCD0P6oBqWCWnrNquLxP9ukFbFurl9Nv1s');
+  const ingresos=[],retiros=[],valuations=[];
+  rows.forEach(r=>{
+    const[ingD,ingV,retD,retV,,valD,valV]=r;
+    if(ingD&&ingV){const v=parseARSCell(ingV);if(v)ingresos.push([ingD,v]);}
+    if(retD&&retV){const v=parseARSCell(retV);if(v)retiros.push([retD,v]);}
+    if(valD&&valV){const v=parseARSCell(valV);if(v)valuations.push([valD,v]);}
+  });
+  if(valuations.length<=3)throw new Error('parse failed');
+  return{valuations,ingresos:ingresos.length?ingresos:FALLBACK_FCI.ingresos,retiros:retiros.length?retiros:FALLBACK_FCI.retiros};
+}
 async function loadFci(){
   const syncLbl=document.getElementById('fciSyncLbl');
   try{
-    const rows=await fetchSheetCSV('1talroWiW1iCD0P6oBqWCWnrNquLxP9ukFbFurl9Nv1s');
-    const ingresos=[],retiros=[],valuations=[];
-    rows.forEach(r=>{
-      const[ingD,ingV,retD,retV,,valD,valV]=r;
-      if(ingD&&ingV){const v=parseARSCell(ingV);if(v)ingresos.push([ingD,v]);}
-      if(retD&&retV){const v=parseARSCell(retV);if(v)retiros.push([retD,v]);}
-      if(valD&&valV){const v=parseARSCell(valV);if(v)valuations.push([valD,v]);}
-    });
-    if(valuations.length>3){
-      renderFci({valuations,ingresos:ingresos.length?ingresos:FALLBACK_FCI.ingresos,retiros:retiros.length?retiros:FALLBACK_FCI.retiros});
-      syncLbl.textContent='🟢 Datos en vivo · Google Sheets';syncLbl.classList.add('live');return;
-    }
-    throw new Error('parse failed');
+    const data=await fetchFciData();
+    renderFci(data);
+    syncLbl.textContent='🟢 Datos en vivo · Google Sheets';syncLbl.classList.add('live');
   }catch(e){renderFci(FALLBACK_FCI);syncLbl.textContent='📋 Datos al 2/6/2026 (sin conexión)';syncLbl.classList.remove('live');}
 }
 loadFci();
 updateReachSim();
+
+// ════════════ RESUMEN EJECUTIVO ════════════
+async function loadResumenEjecutivo(btn){
+  const syncLbl=document.getElementById('resumenSyncLbl');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">⏳</span> Cargando...';}
+  const fm=v=>{if(v===null||v===undefined)return'—';if(Math.abs(v)>=1e6)return'$'+(v/1e6).toFixed(1)+'M';return'$'+Math.round(v/1e3).toLocaleString('es-AR')+'k';};
+  let liveCount=0;
+  let cajaSaldo=null,cajaResultado=null;
+  try{
+    const rows=await fetchSheetCSV('10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I');
+    const p=parseCajaCSV(rows);
+    cajaSaldo=p.saldoActual;
+    cajaResultado=(p.entradasReales!==null&&p.salidasReales!==null)?(p.entradasReales-p.salidasReales):null;
+    document.getElementById('resCajaSaldo').textContent=fm(cajaSaldo);
+    document.getElementById('resCajaSub').innerHTML=cajaResultado!==null?`Resultado del mes: <strong style="color:${cajaResultado>=0?'#16a34a':'#dc2626'}">${cajaResultado>=0?'+':''}${fm(cajaResultado)}</strong>`:'Sin datos de resultado';
+    liveCount++;
+  }catch(e){
+    document.getElementById('resCajaSaldo').textContent='—';
+    document.getElementById('resCajaSub').textContent='Sin conexión — ver detalle abajo';
+  }
+  let fciSaldo=null;
+  try{
+    const fciData=await fetchFciData();
+    fciSaldo=fciData.valuations[fciData.valuations.length-1][1];
+    liveCount++;
+  }catch(e){
+    fciSaldo=FALLBACK_FCI.valuations[FALLBACK_FCI.valuations.length-1][1];
+  }
+  const liquidezTotal=(cajaSaldo||0)+(fciSaldo||0);
+  document.getElementById('resLiquidez').textContent=fm(liquidezTotal);
+  document.getElementById('resLiquidezSub').textContent=`FCI ${fm(fciSaldo)} + Caja ${fm(cajaSaldo)}`;
+  let nuevosCerrados=null,activosUltimo=null,cantSedes=null;
+  try{
+    const{sedes}=await fetchSedes26Data();
+    nuevosCerrados=sedes.reduce((s,x)=>s+(x.b1n||0)+(x.b2n||0)+(x.b3n||0),0);
+    activosUltimo=sedes.reduce((s,x)=>s+(x.b3a||0),0);
+    cantSedes=sedes.length;
+    document.getElementById('resInscriptos').textContent=nuevosCerrados.toLocaleString('es-AR');
+    document.getElementById('resInscriptosSub').textContent=activosUltimo.toLocaleString('es-AR')+' alumnos activos · '+cantSedes+' sedes/CADs';
+    liveCount++;
+  }catch(e){
+    document.getElementById('resInscriptos').textContent='—';
+    document.getElementById('resInscriptosSub').textContent='Sin conexión — ver detalle abajo';
+  }
+  syncLbl.textContent=liveCount===3?'🟢 Datos en vivo · Google Sheets':(liveCount>0?'🟡 Datos parciales · Google Sheets':'📋 Sin conexión');
+  syncLbl.classList[liveCount===3?'add':'remove']('live');
+  document.getElementById('resumenInsight').innerHTML=`<span class="ins-label">📌 Para el directorio</span>
+    Caja: <strong>${fm(cajaSaldo)}</strong>${cajaResultado!==null?' ('+(cajaResultado>=0?'+':'')+fm(cajaResultado)+' este mes)':''} ·
+    Liquidez total (Caja+FCI): <strong>${fm(liquidezTotal)}</strong> ·
+    Inscriptos 2026 (bimestres cerrados): <strong>${nuevosCerrados!==null?nuevosCerrados.toLocaleString('es-AR'):'—'}</strong>${activosUltimo!==null?' · '+activosUltimo.toLocaleString('es-AR')+' activos':''}`;
+  if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualizar';}
+}
+loadResumenEjecutivo();
 
 // ════════════ CAJA DIARIA ════════════
 const AÑOS_CAJAS={
@@ -1465,22 +1561,26 @@ function renderSedesSection(sedes,y2025){
   document.getElementById('kpiCantSedes').textContent=sedes.length;
 }
 
+async function fetchSedes26Data(){
+  const rows=await fetchSheetCSV('1OGt8aL8jtRNwkBIBVqg1vRU93wdqPYmfWMduH7DgVio');
+  const num=v=>{const n=parseInt((v||'').replace(/[^\d-]/g,''),10);return isNaN(n)?null:n;};
+  const sedes=[];let y2025=null;
+  for(const r of rows){
+    const rank=(r[0]||'').trim(),name=(r[1]||'').trim();
+    if(!name)continue;
+    if(/^2025$/.test(name)){y2025={b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9])};continue;}
+    if(!/^\d+$/.test(rank))continue;
+    sedes.push({n:name,b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9])});
+  }
+  if(sedes.length<5)throw new Error('parse failed');
+  return{sedes,y2025:y2025||FALLBACK_SEDES_Y2025};
+}
 async function loadSedes26(btn){
   const syncLbl=document.getElementById('sedesSyncLbl');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">⏳</span> Cargando...';}
   try{
-    const rows=await fetchSheetCSV('1OGt8aL8jtRNwkBIBVqg1vRU93wdqPYmfWMduH7DgVio');
-    const num=v=>{const n=parseInt((v||'').replace(/[^\d-]/g,''),10);return isNaN(n)?null:n;};
-    const sedes=[];let y2025=null;
-    for(const r of rows){
-      const rank=(r[0]||'').trim(),name=(r[1]||'').trim();
-      if(!name)continue;
-      if(/^2025$/.test(name)){y2025={b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9])};continue;}
-      if(!/^\d+$/.test(rank))continue;
-      sedes.push({n:name,b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9])});
-    }
-    if(sedes.length<5)throw new Error('parse failed');
-    renderSedesSection(sedes,y2025||FALLBACK_SEDES_Y2025);
+    const{sedes,y2025}=await fetchSedes26Data();
+    renderSedesSection(sedes,y2025);
     syncLbl.textContent='🟢 Datos en vivo · Google Sheets';syncLbl.classList.add('live');
   }catch(e){
     renderSedesSection(FALLBACK_SEDES26,FALLBACK_SEDES_Y2025);
