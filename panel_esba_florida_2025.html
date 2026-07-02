@@ -580,7 +580,10 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 
   <div class="insight-bar cyan">
     <span class="ins-label">💡 Dato clave</span>
-    MAY 2026 cerrado: ingresos operativos <strong>$82.0M</strong> · egresos reales $65.8M · resultado <strong>+$16.1M</strong> · Saldo cierre MAY: <strong>$19.7M</strong> · MP $10.6M · BBVA $6.6M · Efectivo $1.5M · Santander $1.0M
+    <div class="insight-body">
+      <div class="insight-hero"><span class="insight-hero-val">$19.7M</span><span class="insight-hero-lbl">Saldo cierre MAY 2026</span></div>
+      <div class="insight-secondary">Ingresos operativos <strong>$82.0M</strong> · Egresos reales $65.8M · Resultado <strong>+$16.1M</strong> · MP $10.6M · BBVA $6.6M · Efectivo $1.5M · Santander $1.0M</div>
+    </div>
   </div>
 
 <!-- ══ VISTA DEL MES EN CURSO ══════════════════════════════════════════ -->
@@ -750,7 +753,10 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 <div class="insight-bar blue">
   <span class="ins-label">💡 Dato clave</span>
-  2025 cerrado: <strong>+$12.5M resultado neto</strong> (margen 2.2%) · Mes más fuerte: ABR +$27.3M · Riesgo DIC: sueldos dobles ($64.9M gastos) · Bachillerato = 86.8% de ingresos · % cobro promedio: <strong>84.2%</strong>
+  <div class="insight-body">
+    <div class="insight-hero"><span class="insight-hero-val">+$12.5M</span><span class="insight-hero-lbl">Resultado neto 2025 (margen 2.2%)</span></div>
+    <div class="insight-secondary">Mes más fuerte: ABR +$27.3M · Riesgo DIC: sueldos dobles ($64.9M gastos) · Bachillerato = 86.8% de ingresos · % cobro promedio: <strong>84.2%</strong></div>
+  </div>
 </div>
 <div class="kpi-grid">
   <div class="kpi b"><div class="kpi-lbl">Total Ingresos</div><div class="kpi-val">$567M</div><div class="kpi-sub">12 meses · Bachillerato 86.8%</div></div>
@@ -814,7 +820,10 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 <div class="insight-bar orange">
   <span class="ins-label">💡 Dato clave</span>
-  MAR 2026: mejor mes del año — <strong>144 inscriptos · CPI $19.763</strong> · Meta genera &gt;80% leads a CPL $810 vs Google $4.800 · Sin acceso API directo: datos vía agencia Achalay (retraso 1 mes) · <strong>Riesgo:</strong> concentración 100% en Meta sin alternativa
+  <div class="insight-body">
+    <div class="insight-hero"><span class="insight-hero-val">144 inscriptos</span><span class="insight-hero-lbl">MAR 2026 · mejor mes del año (CPI $19.763)</span></div>
+    <div class="insight-secondary">Meta genera &gt;80% leads a CPL $810 vs Google $4.800 · Sin acceso API directo: datos vía agencia Achalay (retraso 1 mes) · <strong>Riesgo:</strong> concentración 100% en Meta sin alternativa</div>
+  </div>
 </div>
 <!-- ═══ META ADS · SNAPSHOT REAL (7 cuentas) ═══ -->
 <div class="meta-live-bar">
@@ -886,7 +895,10 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 <div class="insight-bar purple">
   <span class="ins-label">🎯 Simulador</span>
-  Al ritmo actual (416 inscriptos en 3 bimestres ENE–MAY'26) → proyección año: <strong>~832 inscriptos</strong> · Para llegar a 1.000 necesitás ~$20.4M inversión restante en 6 meses (CPI promedio $35k) · CPI eficiente MAR = $19.763 → objetivo mensual
+  <div class="insight-body">
+    <div class="insight-hero"><span class="insight-hero-val">~832 inscriptos</span><span class="insight-hero-lbl">Proyección anual al ritmo actual (416 en 3 bimestres ENE–MAY'26)</span></div>
+    <div class="insight-secondary">Para llegar a 1.000 necesitás ~$20.4M inversión restante en 6 meses (CPI promedio $35k) · CPI eficiente MAR = $19.763 → objetivo mensual</div>
+  </div>
 </div>
 <div class="sim-box">
   <div class="sim-top">
@@ -1760,10 +1772,14 @@ function renderPL26(months){
   document.getElementById('pl26KpiOp').textContent=(resOp>=0?'+':'')+'$'+(resOp/1e6).toFixed(1)+'M';
 
   const mesExtra=closed.reduce((best,mo)=>(mo.ing.Empresas||0)>(best?best.ing.Empresas:0)?mo:best,null);
+  const pl26Secondary=[];
+  if(mesExtra&&mesExtra.ing.Empresas>20e6)pl26Secondary.push(`${mesExtra.m} inflado por ingreso de Empresas $${(mesExtra.ing.Empresas/1e6).toFixed(1)}M · Sin ese ítem, resultado = <strong>${resOp>=0?'+':''}$${(resOp/1e6).toFixed(1)}M</strong>`);
+  if(months.some(mo=>mo.parcial))pl26Secondary.push(`${months.find(mo=>mo.parcial).m} en curso, datos parciales`);
   document.getElementById('pl26Insight').innerHTML=`<span class="ins-label">💡 Dato clave</span>
-    ${closed.map(mo=>mo.m).join('–')} acumulado: <strong>${tr2>=0?'+':''}$${(tr2/1e6).toFixed(1)}M</strong>` +
-    (mesExtra&&mesExtra.ing.Empresas>20e6?` · ${mesExtra.m} inflado por ingreso de Empresas $${(mesExtra.ing.Empresas/1e6).toFixed(1)}M · Sin ese ítem, resultado = <strong>${resOp>=0?'+':''}$${(resOp/1e6).toFixed(1)}M</strong>`:'') +
-    (months.some(mo=>mo.parcial)?` · ${months.find(mo=>mo.parcial).m} en curso, datos parciales`:'');
+    <div class="insight-body">
+      <div class="insight-hero"><span class="insight-hero-val">${tr2>=0?'+':''}$${(tr2/1e6).toFixed(1)}M</span><span class="insight-hero-lbl">${closed.map(mo=>mo.m).join('–')} acumulado</span></div>
+      ${pl26Secondary.length?`<div class="insight-secondary">${pl26Secondary.join(' · ')}</div>`:''}
+    </div>`;
 
   document.getElementById('pl26Alerts').innerHTML=`
     <div class="alert blu">💡 <strong>Timing sueldos:</strong> los sueldos del mes N se pagan en el mes N+1 (primera semana). Esto distorsiona resultados individuales mes a mes.</div>
