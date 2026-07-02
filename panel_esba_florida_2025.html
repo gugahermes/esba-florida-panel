@@ -160,7 +160,8 @@ body{background:var(--bg);color:var(--text-1);font-family:'IBM Plex Sans',-apple
 
 /* ── INSIGHT BAR ── */
 .insight-bar{display:flex;align-items:flex-start;gap:14px;padding:16px 20px;border-radius:12px;margin-bottom:20px;font-size:var(--fs-2);font-weight:400;line-height:1.6;background:#fff;border:0.5px solid rgba(0,0,0,0.07);color:var(--text-2);}
-.insight-bar .ins-label{font-size:var(--fs-1);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);white-space:nowrap;margin-top:2px;padding-right:14px;border-right:0.5px solid rgba(0,0,0,0.1);margin-right:2px;}
+.insight-bar .ins-label{font-size:var(--fs-1);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);white-space:nowrap;margin-top:2px;padding-right:14px;border-right:0.5px solid rgba(0,0,0,0.1);margin-right:2px;display:inline-flex;align-items:center;gap:5px;}
+.ins-icon{width:12px;height:12px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;}
 /* Variante con jerarquía: una métrica hero + el resto secundario */
 .insight-body{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0;}
 .insight-hero{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
@@ -368,7 +369,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <div class="sb-item" onclick="sbNav('sec-caja',this)"><span class="sb-label">Caja Diaria</span></div>
     <div class="sb-item" onclick="sbNav('sec-financiero',this)"><span class="sb-label">Cierre 2025</span></div>
     <div class="sb-section">Operativo</div>
-    <div class="sb-item sb-warn" onclick="sbNav('sec-sedes',this)"><span class="sb-label">Red de Sedes</span><span class="sb-badge sb-badge-alert">10⚠</span></div>
+    <div class="sb-item sb-warn" onclick="sbNav('sec-sedes',this)"><span class="sb-label">Red de Sedes</span><span class="sb-badge sb-badge-alert">10<svg class="ins-icon" viewBox="0 0 24 24" style="margin-left:3px;vertical-align:-1px"><path d="M12 3L2 20h20L12 3z"/><line x1="12" y1="9" x2="12" y2="14"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></div>
     <div class="sb-item" onclick="sbNav('sec-publicidad',this)"><span class="sb-label">Marketing y Ventas</span></div>
     <div class="sb-item" onclick="sbNav('sec-simulador',this)"><span class="sb-label">Simulador</span></div>
   </div>
@@ -451,27 +452,27 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 
 <div class="row col3" style="margin-bottom:14px;">
-  <div class="card res-card" style="border-top:3px solid var(--azul);">
+  <div class="card res-card">
     <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--azul)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="10" width="18" height="9" rx="1"/><path d="M3 10l9-6 9 6"/><line x1="3" y1="19" x2="21" y2="19"/></svg></span>Caja diaria</span><span class="card-note">mes en curso</span></div>
     <div class="kpi-val-xl" id="resCajaSaldo">—</div>
     <div class="kpi-sub" id="resCajaSub">Cargando...</div>
     <button class="hbtn" style="margin-top:12px;" onclick="sbNav('sec-caja',null)">Ver detalle →</button>
   </div>
-  <div class="card res-card" style="border-top:3px solid #d97706;">
-    <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:#d97706"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg></span>Liquidez total</span><span class="card-note">Caja + FCI</span></div>
+  <div class="card res-card">
+    <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--azul)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg></span>Liquidez total</span><span class="card-note">Caja + FCI</span></div>
     <div class="kpi-val-xl" id="resLiquidez">—</div>
     <div class="kpi-sub" id="resLiquidezSub">Cargando...</div>
     <button class="hbtn" style="margin-top:12px;" onclick="sbNav('sec-fci',null)">Ver detalle →</button>
   </div>
-  <div class="card res-card" style="border-top:3px solid var(--rojo);">
-    <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--rojo)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg></span>Sedes e inscriptos</span><span class="card-note">2026</span></div>
+  <div class="card res-card">
+    <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--azul)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg></span>Sedes e inscriptos</span><span class="card-note">2026</span></div>
     <div class="kpi-val-xl" id="resInscriptos">—</div>
     <div class="kpi-sub" id="resInscriptosSub">Cargando...</div>
     <button class="hbtn" style="margin-top:12px;" onclick="sbNav('sec-sedes',null)">Ver detalle →</button>
   </div>
 </div>
 <div class="insight-bar blue" id="resumenInsight">
-  <span class="ins-label">📌 Para el directorio</span>
+  <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M12 21s-7-6.5-7-11a7 7 0 0114 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Para el directorio</span>
   Cargando datos en vivo...
 </div>
 </div>
@@ -491,7 +492,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   </div>
 </div>
 <div class="insight-bar amber">
-  <span class="ins-label">💡 Dato clave</span>
+  <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a6 6 0 00-4 10.5c.7.7 1 1.3 1 2.5h6c0-1.2.3-1.8 1-2.5A6 6 0 0012 2z"/></svg>Dato clave</span>
   <div class="insight-body">
     <div class="insight-hero"><span class="insight-hero-val">$150.2M</span><span class="insight-hero-lbl">Cartera FCI al 26/6</span></div>
     <div class="insight-secondary">Capital neto invertido $132M · Rendimiento estimado <strong>+$18.2M (~13.8%)</strong> · Ingresos JUN: 3 ops +$42M · Retiros JUN: 2 ops −$34M · Cobertura: <strong>~4.5 meses de sueldos</strong></div>
@@ -537,7 +538,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 
 <div class="insight-bar green" id="pl26Insight">
-  <span class="ins-label">💡 Dato clave</span>
+  <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a6 6 0 00-4 10.5c.7.7 1 1.3 1 2.5h6c0-1.2.3-1.8 1-2.5A6 6 0 0012 2z"/></svg>Dato clave</span>
   Cargando...
 </div>
 <div class="kpi-grid-4" style="margin-bottom:12px;">
@@ -595,7 +596,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 <div class="caja-box">
 
   <div class="insight-bar cyan">
-    <span class="ins-label">💡 Dato clave</span>
+    <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a6 6 0 00-4 10.5c.7.7 1 1.3 1 2.5h6c0-1.2.3-1.8 1-2.5A6 6 0 0012 2z"/></svg>Dato clave</span>
     <div class="insight-body">
       <div class="insight-hero"><span class="insight-hero-val">$19.7M</span><span class="insight-hero-lbl">Saldo cierre MAY 2026</span></div>
       <div class="insight-secondary">Ingresos operativos <strong>$82.0M</strong> · Egresos reales $65.8M · Resultado <strong>+$16.1M</strong> · MP $10.6M · BBVA $6.6M · Efectivo $1.5M · Santander $1.0M</div>
@@ -709,7 +710,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 
 <div class="insight-bar red">
-  <span class="ins-label">⚠️ Alerta</span>
+  <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M12 3L2 20h20L12 3z"/><line x1="12" y1="9" x2="12" y2="14"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Alerta</span>
   <strong>Estado de pago: ver planilla "Cuenta Corriente Centros"</strong> · Inscriptos 2026: <span id="sedesInsNuevos">409</span> · Alumnos activos: <span id="sedesInsActivos">936</span> — deuda por sede no disponible en vivo todavía
 </div>
 <div class="kpi-grid-4" style="margin-bottom:12px;">
@@ -768,7 +769,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   </div>
 </div>
 <div class="insight-bar blue">
-  <span class="ins-label">💡 Dato clave</span>
+  <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a6 6 0 00-4 10.5c.7.7 1 1.3 1 2.5h6c0-1.2.3-1.8 1-2.5A6 6 0 0012 2z"/></svg>Dato clave</span>
   <div class="insight-body">
     <div class="insight-hero"><span class="insight-hero-val">+$12.5M</span><span class="insight-hero-lbl">Resultado neto 2025 (margen 2.2%)</span></div>
     <div class="insight-secondary">Mes más fuerte: ABR +$27.3M · Riesgo DIC: sueldos dobles ($64.9M gastos) · Bachillerato = 86.8% de ingresos · % cobro promedio: <strong>84.2%</strong></div>
@@ -835,7 +836,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   </div>
 </div>
 <div class="insight-bar orange">
-  <span class="ins-label">💡 Dato clave</span>
+  <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a6 6 0 00-4 10.5c.7.7 1 1.3 1 2.5h6c0-1.2.3-1.8 1-2.5A6 6 0 0012 2z"/></svg>Dato clave</span>
   <div class="insight-body">
     <div class="insight-hero"><span class="insight-hero-val">144 inscriptos</span><span class="insight-hero-lbl">MAR 2026 · mejor mes del año (CPI $19.763)</span></div>
     <div class="insight-secondary">Meta genera &gt;80% leads a CPL $810 vs Google $4.800 · Sin acceso API directo: datos vía agencia Achalay (retraso 1 mes) · <strong>Riesgo:</strong> concentración 100% en Meta sin alternativa</div>
@@ -910,7 +911,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   </div>
 </div>
 <div class="insight-bar purple">
-  <span class="ins-label">🎯 Simulador</span>
+  <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>Simulador</span>
   <div class="insight-body">
     <div class="insight-hero"><span class="insight-hero-val">~832 inscriptos</span><span class="insight-hero-lbl">Proyección anual al ritmo actual (416 en 3 bimestres ENE–MAY'26)</span></div>
     <div class="insight-secondary">Para llegar a 1.000 necesitás ~$20.4M inversión restante en 6 meses (CPI promedio $35k) · CPI eficiente MAR = $19.763 → objetivo mensual</div>
@@ -1181,7 +1182,7 @@ async function loadResumenEjecutivo(btn){
   }
   syncLbl.textContent=liveCount===3?'🟢 Datos en vivo · Google Sheets':(liveCount>0?'🟡 Datos parciales · Google Sheets':'📋 Sin conexión');
   syncLbl.classList[liveCount===3?'add':'remove']('live');
-  document.getElementById('resumenInsight').innerHTML=`<span class="ins-label">📌 Para el directorio</span>
+  document.getElementById('resumenInsight').innerHTML=`<span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M12 21s-7-6.5-7-11a7 7 0 0114 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Para el directorio</span>
     <div class="insight-body">
       <div class="insight-hero"><span class="insight-hero-val">${fm(liquidezTotal)}</span><span class="insight-hero-lbl">Liquidez total (Caja + FCI)</span></div>
       <div class="insight-secondary">Caja: <strong>${fm(cajaSaldo)}</strong>${cajaResultado!==null?' ('+(cajaResultado>=0?'+':'')+fm(cajaResultado)+' este mes)':''} ·
@@ -1791,7 +1792,7 @@ function renderPL26(months){
   const pl26Secondary=[];
   if(mesExtra&&mesExtra.ing.Empresas>20e6)pl26Secondary.push(`${mesExtra.m} inflado por ingreso de Empresas $${(mesExtra.ing.Empresas/1e6).toFixed(1)}M · Sin ese ítem, resultado = <strong>${resOp>=0?'+':''}$${(resOp/1e6).toFixed(1)}M</strong>`);
   if(months.some(mo=>mo.parcial))pl26Secondary.push(`${months.find(mo=>mo.parcial).m} en curso, datos parciales`);
-  document.getElementById('pl26Insight').innerHTML=`<span class="ins-label">💡 Dato clave</span>
+  document.getElementById('pl26Insight').innerHTML=`<span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a6 6 0 00-4 10.5c.7.7 1 1.3 1 2.5h6c0-1.2.3-1.8 1-2.5A6 6 0 0012 2z"/></svg>Dato clave</span>
     <div class="insight-body">
       <div class="insight-hero"><span class="insight-hero-val">${tr2>=0?'+':''}$${(tr2/1e6).toFixed(1)}M</span><span class="insight-hero-lbl">${closed.map(mo=>mo.m).join('–')} acumulado</span></div>
       ${pl26Secondary.length?`<div class="insight-secondary">${pl26Secondary.join(' · ')}</div>`:''}
