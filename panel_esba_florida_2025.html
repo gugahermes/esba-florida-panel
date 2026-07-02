@@ -150,6 +150,12 @@ body{background:var(--bg);color:var(--text-1);font-family:'IBM Plex Sans',-apple
 /* ── INSIGHT BAR ── */
 .insight-bar{display:flex;align-items:flex-start;gap:14px;padding:16px 20px;border-radius:12px;margin-bottom:20px;font-size:var(--fs-2);font-weight:400;line-height:1.6;background:#fff;border:0.5px solid rgba(0,0,0,0.07);color:var(--text-2);}
 .insight-bar .ins-label{font-size:var(--fs-1);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);white-space:nowrap;margin-top:2px;padding-right:14px;border-right:0.5px solid rgba(0,0,0,0.1);margin-right:2px;}
+/* Variante con jerarquía: una métrica hero + el resto secundario */
+.insight-body{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0;}
+.insight-hero{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+.insight-hero-val{font-size:var(--fs-7);font-weight:700;color:var(--text-1);letter-spacing:-.02em;line-height:1;}
+.insight-hero-lbl{font-size:var(--fs-2);color:var(--text-3);font-weight:500;}
+.insight-secondary{font-size:var(--fs-2);color:var(--text-2);line-height:1.5;}
 
 /* ── CARDS ── */
 .row{display:grid;gap:12px;margin-bottom:12px;}
@@ -470,7 +476,10 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 <div class="insight-bar amber">
   <span class="ins-label">💡 Dato clave</span>
-  Cartera FCI <strong>$150.2M al 26/6</strong> · Capital neto invertido $132M · Rendimiento estimado <strong>+$18.2M (~13.8%)</strong> · Ingresos JUN: 3 ops +$42M · Retiros JUN: 2 ops −$34M · Cobertura: <strong>~4.5 meses de sueldos</strong>
+  <div class="insight-body">
+    <div class="insight-hero"><span class="insight-hero-val">$150.2M</span><span class="insight-hero-lbl">Cartera FCI al 26/6</span></div>
+    <div class="insight-secondary">Capital neto invertido $132M · Rendimiento estimado <strong>+$18.2M (~13.8%)</strong> · Ingresos JUN: 3 ops +$42M · Retiros JUN: 2 ops −$34M · Cobertura: <strong>~4.5 meses de sueldos</strong></div>
+  </div>
 </div>
 <div class="kpi-grid-4" style="margin-bottom:12px;">
   <div class="kpi am"><div class="kpi-lbl">Saldo actual</div><div class="kpi-val amb" id="fciSaldo">—</div><div class="kpi-sub" id="fciSaldoFecha">Última valuación</div></div>
@@ -1145,9 +1154,11 @@ async function loadResumenEjecutivo(btn){
   syncLbl.textContent=liveCount===3?'🟢 Datos en vivo · Google Sheets':(liveCount>0?'🟡 Datos parciales · Google Sheets':'📋 Sin conexión');
   syncLbl.classList[liveCount===3?'add':'remove']('live');
   document.getElementById('resumenInsight').innerHTML=`<span class="ins-label">📌 Para el directorio</span>
-    Caja: <strong>${fm(cajaSaldo)}</strong>${cajaResultado!==null?' ('+(cajaResultado>=0?'+':'')+fm(cajaResultado)+' este mes)':''} ·
-    Liquidez total (Caja+FCI): <strong>${fm(liquidezTotal)}</strong> ·
-    Inscriptos 2026 (bimestres cerrados): <strong>${nuevosCerrados!==null?nuevosCerrados.toLocaleString('es-AR'):'—'}</strong>${activosUltimo!==null?' · '+activosUltimo.toLocaleString('es-AR')+' activos':''}`;
+    <div class="insight-body">
+      <div class="insight-hero"><span class="insight-hero-val">${fm(liquidezTotal)}</span><span class="insight-hero-lbl">Liquidez total (Caja + FCI)</span></div>
+      <div class="insight-secondary">Caja: <strong>${fm(cajaSaldo)}</strong>${cajaResultado!==null?' ('+(cajaResultado>=0?'+':'')+fm(cajaResultado)+' este mes)':''} ·
+        Inscriptos 2026 (bimestres cerrados): <strong>${nuevosCerrados!==null?nuevosCerrados.toLocaleString('es-AR'):'—'}</strong>${activosUltimo!==null?' · '+activosUltimo.toLocaleString('es-AR')+' activos':''}</div>
+    </div>`;
   if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualizar';}
 }
 loadResumenEjecutivo();
