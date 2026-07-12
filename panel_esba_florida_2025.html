@@ -115,8 +115,11 @@ body{background:var(--bg);color:var(--text-1);font-family:'IBM Plex Sans',-apple
 .gal-sep{color:rgba(0,0,0,0.1);font-size:var(--fs-4);}
 
 /* ── SECTION HEADER ── */
-.sec-top{display:flex;align-items:flex-end;justify-content:space-between;padding:32px 0 18px;margin:0 0 24px;border-bottom:0.5px solid rgba(0,0,0,0.08);background:transparent;border-top:none;border-left:none;box-shadow:none;}
-.sec-top.fci-hdr,.sec-top.pl26-hdr,.sec-top.caja-hdr,.sec-top.sedes-hdr,.sec-top.fin-hdr,.sec-top.pub-hdr,.sec-top.sim-hdr{border-top:none;background:transparent;}
+/* Sticky: queda visible al scrollear dentro de una sección larga (Caja, P&L, Sedes...),
+   con fondo sólido (var(--bg), el mismo del área de contenido) para tapar lo que pasa
+   por debajo. z-index por encima de las tarjetas pero por debajo del sidebar/modal. */
+.sec-top{display:flex;align-items:flex-end;justify-content:space-between;padding:32px 0 18px;margin:0 0 24px;border-bottom:0.5px solid rgba(0,0,0,0.08);background:var(--bg);border-top:none;border-left:none;box-shadow:none;position:sticky;top:0;z-index:6;}
+.sec-top.fci-hdr,.sec-top.pl26-hdr,.sec-top.caja-hdr,.sec-top.sedes-hdr,.sec-top.fin-hdr,.sec-top.pub-hdr,.sec-top.sim-hdr{border-top:none;background:var(--bg);}
 .sec-top-icon{display:none;}
 .sec-top-text{flex:1;}
 .sec-top-title{font-size:var(--fs-8);font-weight:700;color:var(--text-1);letter-spacing:-.5px;line-height:1.1;}
@@ -124,12 +127,28 @@ body{background:var(--bg);color:var(--text-1);font-family:'IBM Plex Sans',-apple
 .sec-top-right{display:flex;gap:8px;align-items:center;flex-shrink:0;}
 .sec-divider{display:none;}
 
+/* ── MES CERRADO / MES EN CURSO (Caja Diaria) ── */
+/* Dos bloques con quiebre visual real (borde de color + fondo levemente teñido), no dos
+   secciones que continúan una de la otra. Actual = azul/vivo, Cerrado = gris/estable. */
+.mes-block{border-radius:14px;padding:18px 20px;margin-bottom:20px;border:1px solid rgba(0,0,0,0.06);}
+.mes-block-actual{background:rgba(8,145,178,0.045);border-left:3px solid #0891b2;}
+.mes-block-cerrado{background:rgba(100,116,139,0.045);border-left:3px solid #64748b;}
+.mes-block-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.mes-block-tag{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;}
+.tag-actual{color:#0891b2;}
+.tag-cerrado{color:#64748b;}
+
 /* ── SECTION LABELS ── */
 .section-lbl{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);font-weight:500;margin:20px 0 10px;border-left:none;padding-left:0;}
 
 /* ── KPIS ── */
 .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
 .kpi-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.kpi-grid-6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
+.agenda-card{background:#fff;border:0.5px solid rgba(0,0,0,0.07);border-radius:12px;padding:12px 14px;}
+.agenda-card .agenda-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:6px;}
+.agenda-card .agenda-val{font-size:var(--fs-6);font-weight:700;color:var(--text-1);letter-spacing:-.02em;line-height:1.1;}
+.agenda-card .agenda-sub{font-size:10.5px;color:var(--text-3);margin-top:4px;}
 .kpi-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 .kpi{background:#fff;border:0.5px solid rgba(0,0,0,0.07);border-radius:14px;padding:20px 22px;position:relative;overflow:visible;transition:box-shadow .25s var(--ease-spring),transform .25s var(--ease-spring);}
 /* Entrada escalonada — una sola coreografía por sección, no microanimaciones sueltas */
@@ -332,6 +351,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 @media(max-width:900px){
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
   .kpi-grid-4{grid-template-columns:repeat(2,1fr);}
+  .kpi-grid-6{grid-template-columns:repeat(2,1fr);}
   .drive-grid{grid-template-columns:repeat(2,1fr);}
   .bank-row{grid-template-columns:repeat(2,1fr);}
   .col2,.col3{grid-template-columns:1fr;}
@@ -451,6 +471,15 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   </div>
 </div>
 
+<div style="font-size:0.68rem;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Agenda del Comité de Gestión — página 1</div>
+<div class="kpi-grid-6" style="margin-bottom:18px;">
+  <div class="agenda-card"><div class="agenda-lbl">Resultado mes cerrado</div><div class="agenda-val" id="agResultadoCerrado">—</div><div class="agenda-sub" id="agResultadoCerradoSub">Cargando...</div></div>
+  <div class="agenda-card"><div class="agenda-lbl">Avance mes en curso</div><div class="agenda-val" id="agAvanceActual">—</div><div class="agenda-sub" id="agAvanceActualSub">Cargando...</div></div>
+  <div class="agenda-card"><div class="agenda-lbl">P&amp;L acumulado 2026</div><div class="agenda-val" id="agPLAcumulado">—</div><div class="agenda-sub" id="agPLAcumuladoSub">Cargando...</div></div>
+  <div class="agenda-card"><div class="agenda-lbl">Inscripciones vs meta</div><div class="agenda-val" id="agRitmoInscripciones">—</div><div class="agenda-sub" id="agRitmoInscripcionesSub">Cargando...</div></div>
+  <div class="agenda-card"><div class="agenda-lbl">Publicidad vs CPI</div><div class="agenda-val" id="agPublicidadCPI">—</div><div class="agenda-sub" id="agPublicidadCPISub">Cargando...</div></div>
+  <div class="agenda-card"><div class="agenda-lbl">Saldo FCI</div><div class="agenda-val" id="agSaldoFCI">—</div><div class="agenda-sub" id="agSaldoFCISub">Cargando...</div></div>
+</div>
 <div class="row col3" style="margin-bottom:14px;">
   <div class="card res-card">
     <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--azul)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="10" width="18" height="9" rx="1"/><path d="M3 10l9-6 9 6"/><line x1="3" y1="19" x2="21" y2="19"/></svg></span>Caja diaria</span><span class="card-note">mes en curso</span></div>
@@ -589,8 +618,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <div class="sec-top-sub">Movimientos y saldos bancarios · 2005–2026 · Live desde Google Drive</div>
   </div>
   <div class="sec-top-right">
-    <span class="badge" style="background:#0891b2;">JUN en curso</span>
-    <button class="refresh-btn" onclick="refreshCaja(this)" title="Recargar caja del mes actual desde Drive">🔄 Actualizar Caja</button>
+    <button class="refresh-btn" onclick="refreshCaja(this)" title="Recargar Mes Cerrado y Mes en Curso desde Drive">🔄 Actualizar Caja</button>
   </div>
 </div>
 <div class="caja-box">
@@ -598,80 +626,38 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   <div class="insight-bar cyan">
     <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a6 6 0 00-4 10.5c.7.7 1 1.3 1 2.5h6c0-1.2.3-1.8 1-2.5A6 6 0 0012 2z"/></svg>Dato clave</span>
     <div class="insight-body">
-      <div class="insight-hero"><span class="insight-hero-val">$19.7M</span><span class="insight-hero-lbl">Saldo cierre MAY 2026</span></div>
-      <div class="insight-secondary">Ingresos operativos <strong>$82.0M</strong> · Egresos reales $65.8M · Resultado <strong>+$16.1M</strong> · MP $10.6M · BBVA $6.6M · Efectivo $1.5M · Santander $1.0M</div>
+      <div class="insight-hero"><span class="insight-hero-val" id="cajaInsightHero">—</span><span class="insight-hero-lbl" id="cajaInsightLbl">Cargando...</span></div>
+      <div class="insight-secondary" id="cajaInsightSecondary">Cargando datos del mes cerrado...</div>
     </div>
   </div>
 
-<!-- ══ VISTA DEL MES EN CURSO ══════════════════════════════════════════ -->
-<div id="vista-mes-curso" style="margin-bottom:24px;margin-top:4px;">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-    <span style="font-size:0.68rem;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:0.08em;">Mes en curso</span>
-    <span class="badge" style="background:#10b981;font-size:0.62rem;">JUN 2026 · al 30/6 · cierre</span>
-    <span style="margin-left:auto;font-size:0.62rem;color:var(--text-3);">Datos live desde planilla</span>
+<!-- ══ MES EN CURSO — parcial, actualiza al último día con datos ══════════ -->
+<div id="vista-mes-curso" class="mes-block mes-block-actual">
+  <div class="mes-block-hdr">
+    <span class="mes-block-tag tag-actual">Mes en curso</span>
+    <span class="badge" style="background:#0891b2;font-size:0.62rem;" id="cajaDashBadgeActual">Cargando...</span>
+    <span style="margin-left:auto;font-size:0.62rem;font-weight:600;" class="fci-sync" id="cajaDashSyncActual">⏳ Cargando...</span>
   </div>
-
-  <div class="kpi-grid-4" style="margin-bottom:12px;">
-    <div class="kpi">
-      <div class="kpi-lbl">Entradas operacionales JUN</div>
-      <div class="kpi-val pos">$83.6M</div>
-      <div class="kpi-sub">Excl. rescate FCI $34M · mes completo</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-lbl">Salidas reales JUN</div>
-      <div class="kpi-val neg">$71.4M</div>
-      <div class="kpi-sub">Incl. sueldos MAY + IPS + AFIP · excl. $50M a FCI</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-lbl">Resultado JUN</div>
-      <div class="kpi-val pos">+$12.2M</div>
-      <div class="kpi-sub">Mes cerrado · margen 14.6%</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-lbl">FCI al 26/6</div>
-      <div class="kpi-val" style="color:#d97706;">$150.2M</div>
-      <div class="kpi-sub">+$42M ingresado JUN · −$34M retirado</div>
-    </div>
-  </div>
-
-  <div style="background:#fff;border:0.5px solid rgba(0,0,0,0.07);border-radius:14px;padding:18px 20px;margin-bottom:12px;">
-    <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Saldo en cuentas al 30/6/2026</div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-      <div style="text-align:center;">
-        <div style="font-size:1.4rem;font-weight:700;color:var(--text-1);letter-spacing:-.03em;">$11.4M</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Mercado Pago (wallet acum.)</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:1.4rem;font-weight:700;color:var(--text-1);letter-spacing:-.03em;">$5.3M</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Saldo caja total</div>
-      </div>
-    </div>
-    <div style="margin-top:14px;padding-top:12px;border-top:0.5px solid rgba(0,0,0,0.07);display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:12px;color:var(--text-3);">Liquidez total (Caja + FCI al 26/6)</span>
-      <span style="font-size:1.2rem;font-weight:700;color:#1c7a3a;">$155.5M</span>
-    </div>
-  </div>
-
-  <div style="background:#f0fdf4;border:0.5px solid rgba(34,197,94,0.25);border-radius:10px;padding:12px 16px;font-size:12px;color:#166534;">
-    <strong>JUN 2026 cerrado:</strong> mes positivo +$12.2M. $50M neto enviado al FCI en JUN (rescate $34M + inversión $50M = neto −$16M). FCI alcanza <strong>$150.2M al 26/6</strong> (~4.5 meses de sueldos). Comisiones cursos $9M fue el mayor egreso extraordinario del mes.
+  <div style="font-size:0.7rem;color:var(--text-3);margin-bottom:12px;" id="cajaActualFechaLbl">Cargando última fecha con datos...</div>
+  <div id="cajaDashboardActual">
+    <div class="caja-loading">⏳ Cargando mes en curso...</div>
   </div>
 </div>
-<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.06) 20%,rgba(0,0,0,0.06) 80%,transparent);margin-bottom:20px;"></div>
-  <!-- ÚLTIMO MES CERRADO DASHBOARD -->
-  <div style="margin-bottom:20px;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-      <span style="font-size:0.68rem;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:0.08em;">📅 Último mes cerrado</span>
-      <span class="badge" style="background:#10b981;font-size:0.62rem;" id="cajaDashBadge">MAY 2026</span>
-      <span style="margin-left:auto;font-size:0.62rem;font-weight:600;" id="cajaDashSync">⏳ Cargando...</span>
-    </div>
-    <div id="cajaDashboard">
-      <div class="caja-loading">⏳ Cargando dashboard MAY 2026...</div>
-    </div>
+
+<!-- ══ MES CERRADO — estable, no cambia hasta el próximo mes ══════════════ -->
+<div class="mes-block mes-block-cerrado">
+  <div class="mes-block-hdr">
+    <span class="mes-block-tag tag-cerrado">📅 Cerrado</span>
+    <span class="badge" style="background:#64748b;font-size:0.62rem;" id="cajaDashBadge">Cargando...</span>
+    <span style="margin-left:auto;font-size:0.62rem;font-weight:600;" class="fci-sync" id="cajaDashSync">⏳ Cargando...</span>
   </div>
-  <div style="height:1px;background:linear-gradient(90deg,transparent,#e2e8f0 20%,#e2e8f0 80%,transparent);margin-bottom:20px;"></div>
+  <div id="cajaDashboard">
+    <div class="caja-loading">⏳ Cargando mes cerrado...</div>
+  </div>
+</div>
 
   <!-- Year selector -->
-  <div style="font-size:0.68rem;font-weight:700;color:#0891b2;text-transform:uppercase;margin-bottom:10px;letter-spacing:0.08em;">Seleccioná el año</div>
+  <div style="font-size:0.68rem;font-weight:700;color:#0891b2;text-transform:uppercase;margin:8px 0 10px;letter-spacing:0.08em;">Meses anteriores — seleccioná el año</div>
   <div class="yr-grid" id="yrGrid"></div>
 
   <!-- 2026 month tabs (shown only when 2026 selected) -->
@@ -831,7 +817,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <div class="sec-top-sub">Meta Ads (7 cuentas ESBA) · histórico CPI/inscriptos vía Achalay</div>
   </div>
   <div class="sec-top-right">
-    <span class="badge" style="background:#f97316;">7 meses datos</span>
+    <span class="fci-sync" title="No es una planilla en vivo — Meta Ads API + reportes de Achalay se piden en una sesión con Claude">📋 Datos al 1/7/2026 (Meta Ads) · manual</span>
     <button class="refresh-btn" onclick="refreshSection('publicidad',this)" title="Pedirle a Claude que actualice Publicidad">🔄 Actualizar Publicidad</button>
   </div>
 </div>
@@ -883,9 +869,9 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 <div class="meta-sublabel">Histórico CPI/inscriptos · Agencia Achalay (Bachillerato)</div>
 <div class="kpi-grid-4" style="margin-bottom:12px;">
-  <div class="kpi o"><div class="kpi-lbl">Total invertido (7 meses)</div><div class="kpi-val ora">$19.5M</div><div class="kpi-sub">Meta + Google</div></div>
-  <div class="kpi p"><div class="kpi-lbl">Inscriptos vía publicidad</div><div class="kpi-val" style="color:#7c3aed">554</div><div class="kpi-sub">Canal casi exclusivo</div></div>
-  <div class="kpi b"><div class="kpi-lbl">CPI promedio ponderado</div><div class="kpi-val">$35.2k</div><div class="kpi-sub">Rango: $19.8k–$128k</div></div>
+  <div class="kpi o"><div class="kpi-lbl">Total invertido (7 meses)</div><div class="kpi-val ora" id="mktTotalInvertido">$19.5M</div><div class="kpi-sub">Meta + Google</div></div>
+  <div class="kpi p"><div class="kpi-lbl">Inscriptos vía publicidad</div><div class="kpi-val" style="color:#7c3aed" id="mktInscriptos">554</div><div class="kpi-sub">Canal casi exclusivo</div></div>
+  <div class="kpi b"><div class="kpi-lbl">CPI promedio ponderado</div><div class="kpi-val" id="mktCPIPromedio">$35.2k</div><div class="kpi-sub">Rango: $19.8k–$128k</div></div>
   <div class="kpi g"><div class="kpi-lbl">Leads Q1 2026</div><div class="kpi-val pos">9.766</div><div class="kpi-sub">CPL prom. $810</div></div>
 </div>
 <div class="alerts" style="margin-bottom:14px;">
@@ -1106,6 +1092,8 @@ function renderFci(data){
   const fm2=v=>'$'+(v/1e6).toFixed(1)+'M';
   document.getElementById('fciMovIngTot').innerHTML='<span style="color:#16a34a;font-weight:700">+'+fm2(totalIng)+'</span>';
   document.getElementById('fciMovRetTot').innerHTML='<span style="color:#dc2626;font-weight:700">−'+fm2(totalRet)+'</span>';
+  const agVal=document.getElementById('agSaldoFCI'),agSub=document.getElementById('agSaldoFCISub');
+  if(agVal){agVal.textContent=fm(saldo);agSub.textContent='Al '+fechaSaldo+' · '+(rend>=0?'+':'')+fm(rend)+' rendimiento';}
 }
 // Lee una Google Sheet pública (Archivo > Compartir > "Cualquier persona con el enlace")
 // vía el endpoint CSV de gviz — funciona desde cualquier navegador, sin login ni API key.
@@ -1263,6 +1251,16 @@ function selectYear(yr){
 // Parsea la planilla "CAJA <MES>" en su formato real de columnas:
 // A=Fecha B=Entrada desc C=Entrada cuenta D=Entrada importe E=Salida desc F=Salida cuenta G=Salida importe
 // ...seguido de un bloque resumen (TOTAL ENTRADAS/SALIDAS, SALDO, Entradas/Salidas reales, Inversión fondo, Mercado Pago).
+//
+// REGLA NO NEGOCIABLE (confirmada con João 2026-07-12): "SALDO ANTERIOR" (entradas) y
+// "SALDO Actual" (salidas) son el arrastre/cierre de caja, NO movimientos reales del mes.
+// Tampoco lo son "A Inversión" / "Rescate inversión" / "Del Fondo" (transferencias internas
+// al FCI). Por eso NINGÚN cálculo de resultado/entradas/salidas de este archivo debe sumar
+// `movs` a mano — siempre hay que leer las celdas ya calculadas por la propia planilla
+// (TOTAL ENTRADAS, TOTAL SALIDAS, Entradas Reales, Salidas reales, más abajo en este mismo
+// parser). `movs` solo sirve para listar el detalle de movimientos en la UI y para el
+// desglose por categoría del P&L (que ya excluye estas filas por cuenta, ver
+// mapIngresoCategoria/mapEgresoCategoria) — nunca como fuente de un total.
 function parseCajaCSV(rows){
   const pv=parseARSCell;
   const movs=[];
@@ -1285,7 +1283,10 @@ function parseCajaCSV(rows){
     if(/^Entradas Reales/i.test(c1))entradasReales=pv(r[3]);
     if(/^Salidas reales/i.test(c5))salidasReales=pv(r[6]);
     if(/^Inversi[oó]n fondo/i.test(c5))invFondo=pv(r[6]);
-    if(/^Saldo Anterior/i.test(c1)&&mpSaldoAnt===null)mpSaldoAnt=pv(r[2]);
+    // OJO: la fila "SALDO ANTERIOR" del caja principal (arriba, columna C vacía) también
+    // matchea /^Saldo Anterior/i en c1 — sin el chequeo de r[2] acá, pisaba el valor real
+    // de esta sección de Mercado Pago (bug encontrado y corregido 2026-07-12).
+    if(/^Saldo Anterior/i.test(c1)&&r[2]&&mpSaldoAnt===null)mpSaldoAnt=pv(r[2]);
     if(/^Cobros realizados/i.test(c1))mpCobros=pv(r[2]);
     if(/^Salidas de dinero/i.test(c1))mpSalidas=pv(r[2]);
   }
@@ -1346,11 +1347,98 @@ function renderCaja(d,label,fileId){
   document.getElementById('cajaContent').innerHTML=html;
 }
 
-// ════════════ ÚLTIMO MES CERRADO · MAY 2026 (JUN = mes en curso arriba) ════════════
-const ULTIMO_MES = {
-  fileId: '1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8',
-  label: 'MAY 2026'
-};
+// ════════════ MES CERRADO / MES EN CURSO — resolución automática ════════════
+// Ya no se hardcodea "el mes cerrado es MAY" a mano: se calcula solo a partir de la
+// fecha de hoy. MESES_CAJA_INDEX_SHEET_ID (cuando João la cree) es una planilla simple
+// con una fila por mes (columna A "AAAA-MM", columna B = sheetId, columna C = gid
+// opcional) — mientras no exista, se usa MESES_CAJA_BOOTSTRAP a mano, que es exactamente
+// lo mismo que había antes (un array editado a mano cada mes), así que hoy no se pierde
+// nada. En cuanto João pase el ID de esa planilla, cambiar MESES_CAJA_INDEX_SHEET_ID acá
+// abajo y listo — deja de hacer falta tocar este array nunca más.
+const MES_LABELS=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+const MESES_CAJA_INDEX_SHEET_ID=null; // pendiente: pasarle el ID de la planilla índice acá
+const MESES_CAJA_BOOTSTRAP=[
+  {m:'ENE',anio:2026,id:'1JElUN05dxwGmFBvgrRrBblb33moFcl-PueVUEPKxRGs'},
+  {m:'FEB',anio:2026,id:'1hkGq2A7UWs1m8f7UcVGJHIdARA3g1KF59NriIizrEKo'},
+  {m:'MAR',anio:2026,id:'1rmk9M7lVBJfcQKmJRanFW6lNXCvJPGq7aE3pubfDRSA'},
+  {m:'ABR',anio:2026,id:'1MfeZV6_3rof1xzx6KJZoKzA96a8pLOVySvmK1sHKoUk'},
+  {m:'MAY',anio:2026,id:'1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8'},
+  {m:'JUN',anio:2026,id:'10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I'}
+  // JUL 2026 pendiente de confirmar el sheetId con João.
+];
+let _mesesCajaCache=null;
+async function resolverMesesCaja(){
+  if(_mesesCajaCache)return _mesesCajaCache;
+  if(MESES_CAJA_INDEX_SHEET_ID){
+    try{
+      const rows=await fetchSheetCSV(MESES_CAJA_INDEX_SHEET_ID);
+      const meses=rows.filter(r=>/^\d{4}-\d{2}$/.test((r[0]||'').trim())&&r[1]).map(r=>{
+        const[anio,mesNum]=r[0].trim().split('-');
+        return{m:MES_LABELS[parseInt(mesNum,10)-1],anio:parseInt(anio,10),id:r[1].trim(),gid:(r[2]||'').trim()||undefined};
+      });
+      if(meses.length){_mesesCajaCache=meses;return meses;}
+    }catch(e){/* si falla la planilla índice, cae al bootstrap de abajo */}
+  }
+  _mesesCajaCache=MESES_CAJA_BOOTSTRAP;
+  return MESES_CAJA_BOOTSTRAP;
+}
+function resolverMesCerradoYActual(meses,hoy){
+  hoy=hoy||new Date();
+  const mIdx=hoy.getMonth(),anio=hoy.getFullYear();
+  const mesCerradoIdx=mIdx===0?11:mIdx-1, anioCerrado=mIdx===0?anio-1:anio;
+  return{
+    actual:meses.find(x=>x.m===MES_LABELS[mIdx]&&x.anio===anio),
+    cerrado:meses.find(x=>x.m===MES_LABELS[mesCerradoIdx]&&x.anio===anioCerrado),
+    labelActual:MES_LABELS[mIdx]+' '+anio,
+    labelCerrado:MES_LABELS[mesCerradoIdx]+' '+anioCerrado
+  };
+}
+// Última fecha de la columna FECHA con movimientos reales — la Caja Diaria siempre se
+// carga con un día de rezago, así que "mes en curso" nunca asume "ayer" a ciegas.
+function ultimaFechaConDatos(movs){
+  let ultima=null;
+  for(const m of movs)if(m.fecha&&String(m.fecha).trim())ultima=String(m.fecha).trim();
+  return ultima;
+}
+// Categorías del dashboard de Caja (composición ingresos/egresos) — mismo criterio de
+// entCuenta/salCuenta que mapIngresoCategoria/mapEgresoCategoria del P&L más abajo, pero
+// con el detalle más fino que ya usaban estos gráficos (separa bancarios de impuestos,
+// comisiones de cursos de honorarios, etc.) en vez de las categorías más gruesas del P&L.
+function mapIngresoCajaDash(mv){
+  const c=(mv.entCuenta||'').toLowerCase();
+  if(/rescate.*inversi[oó]n/.test(c))return null;
+  if(c.includes('sedes'))return'Cobros sedes';
+  if(c.includes('directo'))return'Cobros directos';
+  if(/mercado pago|^mp$/.test(c))return'Mercado Pago';
+  if(c.includes('ucasal'))return'UCASAL';
+  if(c.includes('terciario'))return'Terciarios';
+  return'Otros';
+}
+function mapEgresoCajaDash(mv){
+  const c=(mv.salCuenta||'').toLowerCase(),d=(mv.salDesc||'').toLowerCase();
+  if(/^a inversi[oó]n$/.test(c))return null;
+  if(c.includes('sueldo'))return'Sueldos';
+  if(d.includes('afip')||d.includes('ganancias')||d.includes('ips ')||d.includes('saeoep')||c.includes('impuesto'))return'Impuestos';
+  if(c.includes('comisi'))return'Comis. cursos';
+  if(c.includes('honorario'))return'Honorarios';
+  if(c.includes('alquiler'))return'Alquiler';
+  if(c.includes('moratoria'))return'Moratorias';
+  if(c.includes('public'))return'Publicidad';
+  if(c.includes('particip'))return'Participación';
+  if(c.includes('banc')||c.includes('gastos mp'))return'Bancarios';
+  if(c.includes('servicio'))return'Servicios';
+  return'Otros';
+}
+function categorizarParaDashboard(movs){
+  const ing={Cobros_sedes:0,Cobros_directos:0,Mercado_Pago:0,UCASAL:0,Terciarios:0,Otros:0};
+  const egr={Sueldos:0,Impuestos:0,Comis_cursos:0,Honorarios:0,Alquiler:0,Moratorias:0,Publicidad:0,Participacion:0,Bancarios:0,Servicios:0,Otros:0};
+  const key=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z]/g,'_');
+  movs.forEach(mv=>{
+    if(mv.entImporte){const cat=mapIngresoCajaDash(mv);if(cat)ing[key(cat)]=(ing[key(cat)]||0)+mv.entImporte;}
+    if(mv.salImporte){const cat=mapEgresoCajaDash(mv);if(cat)egr[key(cat)]=(egr[key(cat)]||0)+mv.salImporte;}
+  });
+  return{ing,egr};
+}
 const FALLBACK_ABR26 = {
   ingOp: 81977912.70, salidas: 65827952.46, resultado: 16149960.24,
   fciRescate: 25000000, aFondo: 45999999.96,
@@ -1361,16 +1449,25 @@ const FALLBACK_ABR26 = {
   eAlquiler: 2.07, eMoratorias: 2.27, ePublicidad: 2.33, eParticipacion: 1.49,
   eBancarios: 1.70, eServicios: 0.75, eOtros: 4.11
 };
-let chartCajaIng=null, chartCajaEgr=null;
-function renderCajaDashboard(d){
-  const fm=v=>{if(!v&&v!==0)return'—';if(Math.abs(v)>=1e6)return'$'+(v/1e6).toFixed(1)+'M';return'$'+Math.round(v/1e3)+'k';};
-  const margen=(d.resultado/d.ingOp*100).toFixed(1);
-  const fciNeto=d.fciRescate-d.aFondo;
-  document.getElementById('cajaDashboard').innerHTML=`
+// Dashboard reusable para Mes Cerrado y Mes en Curso (mismo layout, dos instancias
+// independientes vía suffix — 'cajaDashboard'/'chartCajaIng'/'chartCajaEgr' para el
+// cerrado, '...Actual' para el mes en curso). Composición real (d.ing/d.egr) en vez de
+// las proporciones fijas de abril que quedaban pegadas sin importar el mes mostrado.
+let _chartsCaja={};
+function renderCajaDashboard(d,opts){
+  opts=opts||{};
+  const sfx=opts.suffix||'';
+  const fm=v=>{if(v===null||v===undefined)return'—';if(Math.abs(v)>=1e6)return'$'+(v/1e6).toFixed(1)+'M';return'$'+Math.round(v/1e3)+'k';};
+  const margen=d.ingOp?(d.resultado/d.ingOp*100).toFixed(1):'—';
+  const fciNeto=(d.fciRescate||0)-(d.aFondo||0);
+  const cont=document.getElementById('cajaDashboard'+sfx);
+  if(!cont)return;
+  const resPos=d.resultado===null||d.resultado===undefined?true:d.resultado>=0;
+  cont.innerHTML=`
     <div class="kpi-grid-4" style="margin-bottom:12px;">
       <div class="kpi g"><div class="kpi-lbl">Ingresos operativos</div><div class="kpi-val pos">${fm(d.ingOp)}</div><div class="kpi-sub">Excl. rescate FCI ${fm(d.fciRescate)}</div></div>
       <div class="kpi r"><div class="kpi-lbl">Salidas reales</div><div class="kpi-val neg">${fm(d.salidas)}</div><div class="kpi-sub">Excl. inversión FCI ${fm(d.aFondo)}</div></div>
-      <div class="kpi g"><div class="kpi-lbl">Resultado operativo</div><div class="kpi-val pos">+${fm(d.resultado)}</div><div class="kpi-sub">Margen ${margen}% · Mes positivo ✓</div></div>
+      <div class="kpi ${resPos?'g':'r'}"><div class="kpi-lbl">Resultado operativo</div><div class="kpi-val ${resPos?'pos':'neg'}">${d.resultado!==null&&d.resultado!==undefined?(resPos?'+':'')+fm(d.resultado):'—'}</div><div class="kpi-sub">Margen ${margen}${margen!=='—'?'%':''}${resPos&&d.resultado?' · Mes positivo ✓':''}</div></div>
       <div class="kpi am"><div class="kpi-lbl">FCI neto del mes</div><div class="kpi-val amb">${fciNeto>=0?'+':''}${fm(fciNeto)}</div><div class="kpi-sub">+${fm(d.fciRescate)} rescate · −${fm(d.aFondo)} inversión</div></div>
     </div>
     <div class="bank-row" style="margin-bottom:12px;">
@@ -1380,42 +1477,77 @@ function renderCajaDashboard(d){
       <div class="bank-card"><div class="bank-card-lbl">MP Wallet</div><div class="bank-card-val o">${fm(d.mp)}</div></div>
     </div>
     <div class="row col2">
-      <div class="card"><div class="card-title">Composición de ingresos <span class="card-note">Operativos · ${fm(d.ingOp)}</span></div><div style="height:205px;"><canvas id="chartCajaIng"></canvas></div></div>
-      <div class="card"><div class="card-title">Composición de egresos <span class="card-note">Salidas reales · ${fm(d.salidas)}</span></div><div style="height:205px;"><canvas id="chartCajaEgr"></canvas></div></div>
+      <div class="card"><div class="card-title">Composición de ingresos <span class="card-note">Operativos · ${fm(d.ingOp)}</span></div><div style="height:205px;"><canvas id="chartCajaIng${sfx}"></canvas></div></div>
+      <div class="card"><div class="card-title">Composición de egresos <span class="card-note">Salidas reales · ${fm(d.salidas)}</span></div><div style="height:205px;"><canvas id="chartCajaEgr${sfx}"></canvas></div></div>
     </div>`;
-  if(chartCajaIng)chartCajaIng.destroy();
-  if(chartCajaEgr)chartCajaEgr.destroy();
-  chartCajaIng=new Chart(document.getElementById('chartCajaIng'),{type:'doughnut',data:{labels:['Cobros sedes','Cobros directos','Mercado Pago','UCASAL','Terciarios','Otros'],datasets:[{data:[d.iSedes,d.iDirectos,d.iMP,d.iUcasal,d.iTerciarios,d.iOtros],backgroundColor:['#3b82f6','#0ea5e9','#06b6d4','#a78bfa','#f472b6','#94a3b8'],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{padding:6,usePointStyle:true,boxWidth:8,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: $${ctx.parsed.toFixed(1)}M`}}}}});
-  chartCajaEgr=new Chart(document.getElementById('chartCajaEgr'),{type:'doughnut',data:{labels:['Sueldos','Impuestos','Comis. cursos','Honorarios','Alquiler','Moratorias','Publicidad','Participación','Bancarios','Servicios','Otros'],datasets:[{data:[d.eSueldos,d.eImpuestos,d.eCursos,d.eHonorarios,d.eAlquiler,d.eMoratorias,d.ePublicidad,d.eParticipacion,d.eBancarios,d.eServicios,d.eOtros],backgroundColor:['#ef4444','#f97316','#f59e0b','#eab308','#22c55e','#6366f1','#ec4899','#14b8a6','#38bdf8','#a78bfa','#94a3b8'],borderColor:'#fff',borderWidth:2,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{padding:5,usePointStyle:true,boxWidth:8,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: $${ctx.parsed.toFixed(1)}M`}}}}});
+  const ing=d.ing||{},egr=d.egr||{},toM=v=>(v||0)/1e6;
+  if(_chartsCaja['ing'+sfx])_chartsCaja['ing'+sfx].destroy();
+  if(_chartsCaja['egr'+sfx])_chartsCaja['egr'+sfx].destroy();
+  _chartsCaja['ing'+sfx]=new Chart(document.getElementById('chartCajaIng'+sfx),{type:'doughnut',data:{labels:['Cobros sedes','Cobros directos','Mercado Pago','UCASAL','Terciarios','Otros'],datasets:[{data:[toM(ing.Cobros_sedes),toM(ing.Cobros_directos),toM(ing.Mercado_Pago),toM(ing.UCASAL),toM(ing.Terciarios),toM(ing.Otros)],backgroundColor:['#3b82f6','#0ea5e9','#06b6d4','#a78bfa','#f472b6','#94a3b8'],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{padding:6,usePointStyle:true,boxWidth:8,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: $${ctx.parsed.toFixed(1)}M`}}}}});
+  _chartsCaja['egr'+sfx]=new Chart(document.getElementById('chartCajaEgr'+sfx),{type:'doughnut',data:{labels:['Sueldos','Impuestos','Comis. cursos','Honorarios','Alquiler','Moratorias','Publicidad','Participación','Bancarios','Servicios','Otros'],datasets:[{data:[toM(egr.Sueldos),toM(egr.Impuestos),toM(egr.Comis_cursos),toM(egr.Honorarios),toM(egr.Alquiler),toM(egr.Moratorias),toM(egr.Publicidad),toM(egr.Participacion),toM(egr.Bancarios),toM(egr.Servicios),toM(egr.Otros)],backgroundColor:['#ef4444','#f97316','#f59e0b','#eab308','#22c55e','#6366f1','#ec4899','#14b8a6','#38bdf8','#a78bfa','#94a3b8'],borderColor:'#fff',borderWidth:2,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{padding:5,usePointStyle:true,boxWidth:8,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: $${ctx.parsed.toFixed(1)}M`}}}}});
 }
-async function loadUltimoMesCerrado(){
-  document.getElementById('cajaDashBadge').textContent=ULTIMO_MES.label;
+// tipo: 'cerrado' (último mes calendario ya terminado, estable) | 'actual' (mes en curso,
+// parcial hasta el último día con datos reales de la columna FECHA).
+async function loadMesCajaDashboard(tipo){
+  const sfx=tipo==='actual'?'Actual':'';
+  const badgeEl=document.getElementById('cajaDashBadge'+sfx);
+  const syncEl=document.getElementById('cajaDashSync'+sfx);
+  const meses=await resolverMesesCaja();
+  const r=resolverMesCerradoYActual(meses);
+  const info=tipo==='actual'?r.actual:r.cerrado;
+  const label=tipo==='actual'?r.labelActual:r.labelCerrado;
+  if(badgeEl)badgeEl.textContent=label;
+  if(!info){
+    const cont0=document.getElementById('cajaDashboard'+sfx);
+    if(cont0)cont0.innerHTML=`<div class="caja-yr-panel"><h3>⏳ ${label} pendiente</h3><p>Falta el ID de la planilla de Caja de este mes en <code>MESES_CAJA_BOOTSTRAP</code>. En cuanto se agregue, esta vista se completa sola.</p></div>`;
+    if(syncEl){syncEl.textContent='⏳ Pendiente de sheetId';syncEl.classList.remove('live');}
+    const agValP=document.getElementById(tipo==='actual'?'agAvanceActual':'agResultadoCerrado');
+    const agSubP=document.getElementById(tipo==='actual'?'agAvanceActualSub':'agResultadoCerradoSub');
+    if(agValP){agValP.textContent='⏳';agSubP.textContent=label+' pendiente de sheetId';}
+    return;
+  }
   try{
-    const rows=await fetchSheetCSV(ULTIMO_MES.fileId);
+    const rows=await fetchSheetCSV(info.id,info.gid);
     const p=parseCajaCSV(rows);
-    const ingOp=p.entradasReales!==null?p.entradasReales:FALLBACK_ABR26.ingOp;
-    const salidas=p.salidasReales!==null?p.salidasReales:FALLBACK_ABR26.salidas;
+    const cats=categorizarParaDashboard(p.movs);
+    const ingOp=p.entradasReales!==null?p.entradasReales:null;
+    const salidas=p.salidasReales!==null?p.salidasReales:null;
     renderCajaDashboard({
-      ...FALLBACK_ABR26,
       ingOp,salidas,
-      resultado:(p.entradasReales!==null&&p.salidasReales!==null)?(ingOp-salidas):FALLBACK_ABR26.resultado,
-      fciRescate:p.rescateFCI||FALLBACK_ABR26.fciRescate,
-      aFondo:p.invFondo!==null?p.invFondo:FALLBACK_ABR26.aFondo,
-      santander:p.santander||FALLBACK_ABR26.santander,
-      bbva8:p.bbva8||FALLBACK_ABR26.bbva8,
-      efectivo:p.efectivo||FALLBACK_ABR26.efectivo,
-      mp:p.mp!==null?p.mp:FALLBACK_ABR26.mp,
-      saldoCaja:p.saldoActual!==null?p.saldoActual:FALLBACK_ABR26.saldoCaja
-    });
-    document.getElementById('cajaDashSync').textContent='🟢 Datos en vivo · Google Sheets';
-    document.getElementById('cajaDashSync').style.color='#16a34a';
+      resultado:(ingOp!==null&&salidas!==null)?(ingOp-salidas):null,
+      fciRescate:p.rescateFCI||0,
+      aFondo:p.invFondo,
+      santander:p.santander,bbva8:p.bbva8,efectivo:p.efectivo,
+      mp:p.mp,saldoCaja:p.saldoActual,
+      ing:cats.ing,egr:cats.egr
+    },{suffix:sfx});
+    const fmAg=v=>{if(v===null||v===undefined)return'—';return(v>=0?'+':'')+'$'+(v/1e6).toFixed(1)+'M';};
+    const resultado=(ingOp!==null&&salidas!==null)?(ingOp-salidas):null;
+    if(tipo==='actual'){
+      const fecha=ultimaFechaConDatos(p.movs);
+      const lblEl=document.getElementById('cajaActualFechaLbl');
+      if(lblEl)lblEl.textContent=fecha?`Al ${fecha} · último cierre registrado en la planilla`:'Datos parciales del mes en curso';
+      if(syncEl){syncEl.textContent='🟢 Datos en vivo · Google Sheets';syncEl.classList.add('live');}
+      const agVal=document.getElementById('agAvanceActual'),agSub=document.getElementById('agAvanceActualSub');
+      if(agVal){agVal.textContent=fmAg(resultado);agSub.textContent=(fecha?'Al '+fecha:label)+' · parcial';}
+    }else{
+      if(syncEl){syncEl.textContent='Cerrado — no cambia hasta el próximo mes';syncEl.classList.remove('live');}
+      const fm=v=>{if(v===null||v===undefined)return'—';return'$'+(v/1e6).toFixed(1)+'M';};
+      const heroEl=document.getElementById('cajaInsightHero'),lblEl2=document.getElementById('cajaInsightLbl'),secEl=document.getElementById('cajaInsightSecondary');
+      if(heroEl)heroEl.textContent=fm(p.saldoActual);
+      if(lblEl2)lblEl2.textContent='Saldo cierre '+label;
+      if(secEl)secEl.innerHTML=`Ingresos operativos <strong>${fm(ingOp)}</strong> · Egresos reales ${fm(salidas)} · Resultado <strong>${resultado!==null&&resultado>=0?'+':''}${fm(resultado)}</strong> · MP ${fm(p.mp)}`;
+      const agVal=document.getElementById('agResultadoCerrado'),agSub=document.getElementById('agResultadoCerradoSub');
+      if(agVal){agVal.textContent=fmAg(resultado);agSub.textContent=label;}
+    }
   }catch(e){
-    renderCajaDashboard(FALLBACK_ABR26);
-    document.getElementById('cajaDashSync').textContent='📋 Datos al 30/6/2026 (sin conexión)';
-    document.getElementById('cajaDashSync').style.color='#94a3b8';
+    if(syncEl){syncEl.textContent='📋 Sin conexión';syncEl.classList.remove('live');}
+    const cont=document.getElementById('cajaDashboard'+sfx);
+    if(cont)cont.innerHTML=`<div class="caja-yr-panel"><h3>⚠️ No se pudo cargar ${label}</h3><p>Revisá que la planilla esté compartida como "Cualquiera con el enlace".</p><a class="drive-link" href="https://docs.google.com/spreadsheets/d/${info.id}" target="_blank">📊 Abrir en Drive</a></div>`;
   }
 }
-loadUltimoMesCerrado();
+loadMesCajaDashboard('cerrado');
+loadMesCajaDashboard('actual');
 
 // Auto-select 2026 on load
 selectYear('2026');
@@ -1703,14 +1835,8 @@ const FALLBACK_D26={
     {Sueldos:28.9,Honorarios:4.9,Bancarios:1.3,Alquiler:2.3,Moratorias:2.3,Plataformas:0.6,Publicidad:0.7,Impuestos:13.0,Otros:17.4}
   ].map(o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k,v*1e6])))
 };
-const PL26_MONTHS=[
-  {m:'ENE',id:'1JElUN05dxwGmFBvgrRrBblb33moFcl-PueVUEPKxRGs'},
-  {m:'FEB',id:'1hkGq2A7UWs1m8f7UcVGJHIdARA3g1KF59NriIizrEKo'},
-  {m:'MAR',id:'1rmk9M7lVBJfcQKmJRanFW6lNXCvJPGq7aE3pubfDRSA'},
-  {m:'ABR',id:'1MfeZV6_3rof1xzx6KJZoKzA96a8pLOVySvmK1sHKoUk'},
-  {m:'MAY',id:'1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8'},
-  {m:'JUN',id:'10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I'}
-];
+// (el listado de meses/IDs vive en MESES_CAJA_BOOTSTRAP, más arriba, compartido con
+// Mes Cerrado/Mes en Curso — ver resolverMesesCaja)
 const ING_CATS=['Bachillerato','Empresas','UCASAL','Terciarios','Otros'];
 const EGR_CATS=['Sueldos','Honorarios','Bancarios','Alquiler','Moratorias','Plataformas','Publicidad','Impuestos','Otros'];
 function mapIngresoCategoria(mv){
@@ -1794,6 +1920,14 @@ function renderPL26(months){
   document.getElementById('pl26KpiResSub').textContent='Incl. extraordinarios Empresas $'+(tEmpresas/1e6).toFixed(1)+'M';
   const resOp=tr2-tEmpresas;
   document.getElementById('pl26KpiOp').textContent=(resOp>=0?'+':'')+'$'+(resOp/1e6).toFixed(1)+'M';
+  const agPL=document.getElementById('agPLAcumulado'),agPLSub=document.getElementById('agPLAcumuladoSub');
+  if(agPL){
+    agPL.textContent=(tr2>=0?'+':'')+'$'+(tr2/1e6).toFixed(1)+'M';
+    // No hay un P&L "proyectado"/presupuestado cargado en ningún lado del panel — se
+    // muestra el acumulado real. Si en algún momento existe un objetivo, agregar el
+    // contraste acá.
+    agPLSub.textContent=closed.map(mo=>mo.m).join('–')+' · sin objetivo cargado';
+  }
 
   const mesExtra=closed.reduce((best,mo)=>(mo.ing.Empresas||0)>(best?best.ing.Empresas:0)?mo:best,null);
   const pl26Secondary=[];
@@ -1815,8 +1949,16 @@ async function loadPL26(btn){
   const syncLbl=document.getElementById('pl26SyncLbl');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">⏳</span> Cargando...';}
   try{
-    const months=await Promise.all(PL26_MONTHS.map(async(mo,i)=>{
-      const rows=await fetchSheetCSV(mo.id);
+    // Mismo listado de meses que Mes Cerrado/Mes en Curso (ver resolverMesesCaja) — un
+    // solo lugar para editar cuando haya una planilla índice, en vez de un array aparte
+    // para P&L que se podía desincronizar (pasó: quedó "JUN parcial" pese a estar
+    // cerrado hace rato). "Parcial" ahora se decide por fecha real, no por ser el último
+    // ítem del array.
+    const mesesDisponibles=await resolverMesesCaja();
+    const{actual:mesActualInfo}=resolverMesCerradoYActual(mesesDisponibles);
+    const meses=mesesDisponibles.filter(mo=>mo.anio===2026);
+    const months=await Promise.all(meses.map(async(mo)=>{
+      const rows=await fetchSheetCSV(mo.id,mo.gid);
       const p=parseCajaCSV(rows);
       const ing={};ING_CATS.forEach(c=>ing[c]=0);
       const egr={};EGR_CATS.forEach(c=>egr[c]=0);
@@ -1828,7 +1970,7 @@ async function loadPL26(btn){
       const egrTot=Object.values(egr).reduce((a,b)=>a+b,0);
       const ingresos=p.entradasReales!==null&&p.entradasReales>0?p.entradasReales:ingTot;
       const egresos=p.salidasReales!==null&&p.salidasReales>0?p.salidasReales:egrTot;
-      return{m:mo.m,ingresos,egresos,ing,egr,parcial:i===PL26_MONTHS.length-1};
+      return{m:mo.m,ingresos,egresos,ing,egr,parcial:!!(mesActualInfo&&mo.m===mesActualInfo.m&&mo.anio===mesActualInfo.anio)};
     }));
     if(months.filter(mo=>mo.ingresos>0).length<4)throw new Error('parse failed');
     renderPL26(months);
@@ -1876,6 +2018,8 @@ function updateSim(){
   else if(pct>=80){fill.style.background='#f59e0b';pctEl.style.color='#d97706';}
   else{fill.style.background='#ef4444';pctEl.style.color='#dc2626';}
   pctEl.textContent=pct+'%';
+  const agRit=document.getElementById('agRitmoInscripciones'),agRitSub=document.getElementById('agRitmoInscripcionesSub');
+  if(agRit){agRit.textContent=pct+'%';agRitSub.textContent='Proyección '+proyAnual.toLocaleString('es-AR')+' de '+target.toLocaleString('es-AR')+' meta';}
   const ritmoNec=restante/mesesRest,diffPct=Math.round((ritmoNec/ritmoActual-1)*100);
   const pn=document.getElementById('paceNote');
   if(pct>=100){pn.innerHTML=`📊 Al ritmo actual, proyectás <strong>${proyAnual}</strong> inscriptos ✅`;}
@@ -1889,6 +2033,18 @@ function updateSim(){
 }
 document.getElementById('simTarget').addEventListener('input',function(){document.getElementById('simSlider').value=this.value;updateSim();});
 updateSim();
+
+// Marketing y Ventas no es una planilla en vivo (Meta Ads API + reportes de Achalay, se
+// piden a mano en una sesión con Claude) — la tile de agenda solo copia lo que ya está
+// cargado en el HTML de esa sección, no recalcula nada.
+(function initAgendaPublicidad(){
+  const inv=document.getElementById('mktTotalInvertido'),cpi=document.getElementById('mktCPIPromedio');
+  const agVal=document.getElementById('agPublicidadCPI'),agSub=document.getElementById('agPublicidadCPISub');
+  if(inv&&cpi&&agVal){
+    agVal.textContent=inv.textContent;
+    agSub.textContent='CPI prom. '+cpi.textContent+' · datos al 1/7 (manual)';
+  }
+})();
 
 // ════════════ REFRESH / UPDATE BUTTONS ════════════
 async function refreshFci(btn){
@@ -1907,15 +2063,12 @@ async function refreshFciModal(){
   await refreshFci(btn);
 }
 
-function refreshCaja(btn){
-  // Recarga el mes actual en la sección caja
-  try{
-    selectYear('2026');
-  }catch(e){}
-  if(btn){
-    btn.innerHTML='<span class="spinning">⏳</span>';
-    setTimeout(()=>{btn.innerHTML='🔄 Actualizar Caja';},2000);
-  }
+async function refreshCaja(btn){
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">⏳</span> Cargando...';}
+  _mesesCajaCache=null; // fuerza re-leer la planilla índice (o el bootstrap) por si cambió
+  await Promise.all([loadMesCajaDashboard('cerrado'),loadMesCajaDashboard('actual')]);
+  try{selectYear('2026');}catch(e){}
+  if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualizar Caja';}
 }
 
 const REFRESH_PROMPTS={
