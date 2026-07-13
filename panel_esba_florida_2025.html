@@ -395,7 +395,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   </div>
   <div class="sb-footer">
     <div class="sb-upd-lbl">Última actualización</div>
-    <div class="sb-upd-val">30 junio 2026 · 10:00 hs</div>
+    <div class="sb-upd-val" id="sbUpdVal">Cargando...</div>
     <button class="sb-refresh" onclick="refreshAll(this)">🔄 Actualizar todo</button>
   </div>
 </div>
@@ -413,7 +413,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <div class="live-chip"><div class="live-dot"></div>Live · Drive</div>
   </div>
   <div class="topbar-right">
-    <span class="update-lbl">30/6/2026</span>
+    <span class="update-lbl" id="topbarFecha" title="Fecha de hoy — cada sección abajo muestra su propia fecha de último dato real">Cargando...</span>
     <button class="hbtn" id="execBtn" onclick="toggleExec(this)">📋 Vista ejecutiva</button>
     <button class="hbtn primary" onclick="document.getElementById('modal').classList.add('open')">↻ Actualizar</button>
   </div>
@@ -500,10 +500,9 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <button class="hbtn" style="margin-top:12px;" onclick="sbNav('sec-sedes',null)">Ver detalle →</button>
   </div>
 </div>
-<div class="insight-bar blue" id="resumenInsight">
-  <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M12 21s-7-6.5-7-11a7 7 0 0114 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Para el directorio</span>
-  Cargando datos en vivo...
-</div>
+  <!-- Se sacó el insight-bar "Para el directorio": repetía en prosa los mismos
+  números que ya están en la Agenda del Comité (arriba) y en estas 3 tarjetas —
+  encontrado en la revisión de concordancia 2026-07-13. -->
 </div>
 
 <div class="sec-divider"></div>
@@ -523,8 +522,8 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 <div class="insight-bar amber">
   <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a6 6 0 00-4 10.5c.7.7 1 1.3 1 2.5h6c0-1.2.3-1.8 1-2.5A6 6 0 0012 2z"/></svg>Dato clave</span>
   <div class="insight-body">
-    <div class="insight-hero"><span class="insight-hero-val">$150.2M</span><span class="insight-hero-lbl">Cartera FCI al 26/6</span></div>
-    <div class="insight-secondary">Capital neto invertido $132M · Rendimiento estimado <strong>+$18.2M (~13.8%)</strong> · Ingresos JUN: 3 ops +$42M · Retiros JUN: 2 ops −$34M · Cobertura: <strong>~4.5 meses de sueldos</strong></div>
+    <div class="insight-hero"><span class="insight-hero-val" id="fciInsightHero">—</span><span class="insight-hero-lbl" id="fciInsightLbl">Cargando...</span></div>
+    <div class="insight-secondary" id="fciInsightSecondary">Cargando datos en vivo...</div>
   </div>
 </div>
 <div class="kpi-grid-4" style="margin-bottom:12px;">
@@ -558,7 +557,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   <div class="sec-top-icon">📈</div>
   <div class="sec-top-text">
     <div class="sec-top-title">P&amp;L 2026 · Resultado financiero</div>
-    <div class="sec-top-sub">ENE–JUN 2026 · Cash basis · ARS corrientes · derivado de Caja Diaria en vivo · JUN cerrado</div>
+    <div class="sec-top-sub" id="pl26SecSub">Cash basis · ARS corrientes · derivado de Caja Diaria en vivo</div>
   </div>
   <div class="sec-top-right">
     <span class="fci-sync" id="pl26SyncLbl">⏳ Cargando...</span>
@@ -906,8 +905,8 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 <div class="insight-bar purple">
   <span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>Simulador</span>
   <div class="insight-body">
-    <div class="insight-hero"><span class="insight-hero-val">~832 inscriptos</span><span class="insight-hero-lbl">Proyección anual al ritmo actual (416 en 3 bimestres ENE–MAY'26)</span></div>
-    <div class="insight-secondary">Para llegar a 1.000 necesitás ~$20.4M inversión restante en 6 meses (CPI promedio $35k) · CPI eficiente MAR = $19.763 → objetivo mensual</div>
+    <div class="insight-hero"><span class="insight-hero-val" id="simInsightHero">~832 inscriptos</span><span class="insight-hero-lbl" id="simInsightLbl">Proyección anual al ritmo actual (416 en 3 bimestres ENE–MAY'26)</span></div>
+    <div class="insight-secondary" id="simInsightSecondary">Para llegar a 1.000 necesitás ~$20.4M inversión restante en 6 meses (CPI promedio $35k) · CPI eficiente MAR = $19.763 → objetivo mensual</div>
   </div>
 </div>
 <div class="sim-box">
@@ -931,7 +930,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     </div>
     <div>
       <div class="sim-stats">
-        <div class="sim-stat"><div class="sim-stat-val blu">416</div><div class="sim-stat-lbl">Confirmados ENE–MAY'26 (3 bimestres)</div></div>
+        <div class="sim-stat"><div class="sim-stat-val blu" id="statConfirmado">416</div><div class="sim-stat-lbl" id="statConfirmadoLbl">Confirmados ENE–MAY'26 (3 bimestres)</div></div>
         <div class="sim-stat"><div class="sim-stat-val" id="statRestante" style="color:#dc2626;">584</div><div class="sim-stat-lbl">Inscriptos restantes</div></div>
         <div class="sim-stat"><div class="sim-stat-val grn" id="statProyeccion">832</div><div class="sim-stat-lbl">Proyección año completo</div></div>
       </div>
@@ -975,6 +974,19 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div><!-- /layout -->
 
 <script>
+// Fecha real de hoy en el topbar — antes quedaba "30/6/2026" fijo en el código sin
+// importar cuándo se abriera el panel. Cada sección ya muestra su propia fecha de
+// último dato (label "Al {fecha}"); esto de acá es solo "hoy es tal día".
+document.getElementById('topbarFecha').textContent=new Date().toLocaleDateString('es-AR');
+{
+  const ahora=new Date();
+  const fechaHora=ahora.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})+' · '+ahora.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  const sbUpd=document.getElementById('sbUpdVal');
+  if(sbUpd)sbUpd.textContent=fechaHora;
+  const footerEl=document.querySelector('.footer');
+  if(footerEl)footerEl.textContent=footerEl.textContent.replace(/\d{1,2} \w+ 2026$/,ahora.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}));
+}
+
 // ════════════ EXECUTIVE MODE ════════════
 function toggleExec(btn){
   const body=document.body;
@@ -1077,6 +1089,12 @@ function renderFci(data){
   document.getElementById('fciRetCount').textContent=retiros.length+' retiros registrados';
   document.getElementById('fciRendimiento').textContent=(rend>=0?'+':'')+fm(rend);
   document.getElementById('fciRendPct').textContent='Capital neto '+fm(capitalNeto)+' · '+rendPct+'% retorno';
+  const heroEl=document.getElementById('fciInsightHero'),lblEl=document.getElementById('fciInsightLbl'),secEl=document.getElementById('fciInsightSecondary');
+  if(heroEl){
+    heroEl.textContent=fm(saldo);
+    lblEl.textContent='Cartera FCI al '+fechaSaldo;
+    secEl.innerHTML=`Capital neto invertido ${fm(capitalNeto)} · Rendimiento estimado <strong>${rend>=0?'+':''}${fm(rend)} (~${rendPct}%)</strong> · ${ingresos.length} ingresos registrados (+${fm(totalIng)}) · ${retiros.length} retiros registrados (−${fm(totalRet)})`;
+  }
   if(fciChart)fciChart.destroy();
   fciChart=new Chart(document.getElementById('chartFCI'),{type:'line',data:{labels:valuations.map(v=>v[0]),datasets:[{label:'Saldo FCI',data:valuations.map(v=>v[1]/1e6),borderColor:'#26276E',backgroundColor:'rgba(38,39,110,0.08)',fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#26276E',pointBorderColor:'#fff',pointBorderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+ctx.parsed.y.toFixed(1)+'M'}}},scales:{x:{grid:{color:gc},border:{color:bc},ticks:{maxRotation:45,font:{size:10}}},y:{grid:{color:gc},border:{color:bc},ticks:{callback:v=>'$'+v+'M'},title:{display:true,text:'Millones ARS',color:'#94a3b8',font:{size:10}}}}}});
   const parseDate=s=>{const p=s.split('/');return p.length===2?parseInt(p[0])*100+parseInt(p[1]):0;};
@@ -1306,12 +1324,6 @@ async function loadResumenEjecutivo(btn){
   }
   syncLbl.textContent=liveCount===3?'🟢 Datos en vivo · Google Sheets':(liveCount>0?'🟡 Datos parciales · Google Sheets':'📋 Sin conexión');
   syncLbl.classList[liveCount===3?'add':'remove']('live');
-  document.getElementById('resumenInsight').innerHTML=`<span class="ins-label"><svg class="ins-icon" viewBox="0 0 24 24"><path d="M12 21s-7-6.5-7-11a7 7 0 0114 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Para el directorio</span>
-    <div class="insight-body">
-      <div class="insight-hero"><span class="insight-hero-val">${fm(liquidezTotal)}</span><span class="insight-hero-lbl">Liquidez total (Caja + FCI)</span></div>
-      <div class="insight-secondary">Caja: <strong>${fm(cajaSaldo)}</strong>${cajaResultado!==null?' ('+(cajaResultado>=0?'+':'')+fm(cajaResultado)+' este mes)':''} ·
-        Inscriptos 2026 (bimestres cerrados): <strong>${nuevosCerrados!==null?nuevosCerrados.toLocaleString('es-AR'):'—'}</strong>${activosUltimo!==null?' · '+activosUltimo.toLocaleString('es-AR')+' activos':''}</div>
-    </div>`;
   if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualizar';}
 }
 loadResumenEjecutivo();
@@ -1911,6 +1923,15 @@ function mapEgresoCategoria(mv){
   return'Otros';
 }
 function renderPL26(months){
+  // Subtítulo dinámico — antes quedaba "ENE–JUN 2026" fijo aunque julio ya estuviera
+  // incluido en el gráfico de abajo.
+  const subEl=document.getElementById('pl26SecSub');
+  if(subEl&&months.length){
+    const parcial=months.find(mo=>mo.parcial);
+    const cerrados=months.filter(mo=>!mo.parcial);
+    const ultimoCerrado=cerrados[cerrados.length-1];
+    subEl.textContent=`${months[0].m}–${months[months.length-1].m} 2026 · Cash basis · ARS corrientes · derivado de Caja Diaria en vivo`+(ultimoCerrado?` · ${ultimoCerrado.m} cerrado`:'')+(parcial?` · ${parcial.m} en curso`:'');
+  }
   const labels=months.map(mo=>mo.m+(mo.live===false?'':''));
   const ing=months.map(mo=>mo.ingresos/1e6);
   const egr=months.map(mo=>mo.egresos/1e6);
@@ -2055,15 +2076,26 @@ function updateReachSim(){
     <div class="kpi o"><div class="kpi-lbl">CPC estimado</div><div class="kpi-val ora">${cpc>0?f(cpc):'—'}</div><div class="kpi-sub">Costo por click</div></div>`;
 }
 
+// Confirmados/ritmo real — antes eran constantes fijas (416 / 69.3) que se
+// desincronizaban en silencio de la planilla de Sedes. SIM_CONFIRMADOS_REAL se llena
+// de forma async desde loadSedes26(); mientras no esté listo, usa el valor fijo como
+// fallback (mismo patrón que el resto del panel: nunca queda en blanco).
+let SIM_CONFIRMADOS_REAL=null;
 function updateSim(){
   const target=parseInt(document.getElementById('simTarget').value)||1000;
   document.getElementById('simSlider').value=target;
-  const confirmed=416,mesesRest=parseInt(document.getElementById('simMeses').value);
-  const ritmoActual=69.3,proyAnual=Math.round(confirmed+ritmoActual*(12-6));
+  const mesesTranscurridos=new Date().getMonth()||6; // ENE=0 → julio(6)=6 meses ya cerrados
+  const confirmed=SIM_CONFIRMADOS_REAL!==null?SIM_CONFIRMADOS_REAL:416;
+  const mesesRest=parseInt(document.getElementById('simMeses').value);
+  const ritmoActual=confirmed/mesesTranscurridos,proyAnual=Math.round(confirmed+ritmoActual*(12-mesesTranscurridos));
   const restante=Math.max(0,target-confirmed);
   const pct=Math.min(100,Math.round(proyAnual/target*100));
+  document.getElementById('statConfirmado').textContent=confirmed.toLocaleString('es-AR');
+  document.getElementById('statConfirmadoLbl').textContent=`Confirmados ENE–${MES_LABELS[mesesTranscurridos-1]||'JUN'}'26`;
   document.getElementById('statRestante').textContent=restante.toLocaleString('es-AR');
   document.getElementById('statProyeccion').textContent=proyAnual.toLocaleString('es-AR');
+  const simHero=document.getElementById('simInsightHero'),simLbl=document.getElementById('simInsightLbl');
+  if(simHero){simHero.textContent='~'+proyAnual+' inscriptos';simLbl.textContent=`Proyección anual al ritmo actual (${confirmed} en lo que va de 2026)`;}
   const fill=document.getElementById('paceFill'),pctEl=document.getElementById('pacePct');
   fill.style.width=pct+'%';
   if(pct>=100){fill.style.background='#22c55e';pctEl.style.color='#16a34a';}
@@ -2085,6 +2117,13 @@ function updateSim(){
 }
 document.getElementById('simTarget').addEventListener('input',function(){document.getElementById('simSlider').value=this.value;updateSim();});
 updateSim();
+(async function cargarConfirmadosReales(){
+  try{
+    const{sedes}=await fetchSedes26Data();
+    SIM_CONFIRMADOS_REAL=sedes.reduce((s,x)=>s+(x.b1n||0)+(x.b2n||0)+(x.b3n||0),0);
+    updateSim();
+  }catch(e){/* se queda con el fallback 416 */}
+})();
 
 // Marketing y Ventas no es una planilla en vivo (Meta Ads API + reportes de Achalay, se
 // piden a mano en una sesión con Claude) — la tile de agenda solo copia lo que ya está
@@ -2156,6 +2195,9 @@ async function refreshAll(btn){
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">⏳</span> Actualizando...';}
   // 1. FCI: actualización directa
   try{await loadFci();}catch(e){}
+  const ahora=new Date();
+  const sbUpd=document.getElementById('sbUpdVal');
+  if(sbUpd)sbUpd.textContent=ahora.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})+' · '+ahora.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   // 2. P&L: vía Claude
   refreshSection('all', null);
   if(btn){
