@@ -1121,6 +1121,128 @@ async function fetchFciData(){
   if(valuations.length<=3)throw new Error('parse failed');
   return{valuations,ingresos:ingresos.length?ingresos:FALLBACK_FCI.ingresos,retiros:retiros.length?retiros:FALLBACK_FCI.retiros};
 }
+// ════════════ MES CERRADO / MES EN CURSO — resolución automática ════════════
+// Ya no se hardcodea "el mes cerrado es MAY" a mano: se calcula solo a partir de la
+// fecha de hoy. MESES_CAJA_INDEX_SHEET_ID (cuando João la cree) es una planilla simple
+// con una fila por mes (columna A "AAAA-MM", columna B = sheetId, columna C = gid
+// opcional) — mientras no exista, se usa MESES_CAJA_BOOTSTRAP a mano, que es exactamente
+// lo mismo que había antes (un array editado a mano cada mes), así que hoy no se pierde
+// nada. En cuanto João pase el ID de esa planilla, cambiar MESES_CAJA_INDEX_SHEET_ID acá
+// abajo y listo — deja de hacer falta tocar este array nunca más.
+const MES_LABELS=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+const MESES_CAJA_INDEX_SHEET_ID=null; // pendiente: pasarle el ID de la planilla índice acá
+const MESES_CAJA_BOOTSTRAP=[
+  {m:'ENE',anio:2026,id:'1JElUN05dxwGmFBvgrRrBblb33moFcl-PueVUEPKxRGs'},
+  {m:'FEB',anio:2026,id:'1hkGq2A7UWs1m8f7UcVGJHIdARA3g1KF59NriIizrEKo'},
+  {m:'MAR',anio:2026,id:'1rmk9M7lVBJfcQKmJRanFW6lNXCvJPGq7aE3pubfDRSA'},
+  {m:'ABR',anio:2026,id:'1MfeZV6_3rof1xzx6KJZoKzA96a8pLOVySvmK1sHKoUk'},
+  {m:'MAY',anio:2026,id:'1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8'},
+  {m:'JUN',anio:2026,id:'10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I'},
+  {m:'JUL',anio:2026,id:'13Vv10pwm_586veWBAX2ezPPA0xGyQ6IdZl2jMbrhjL8'}
+];
+let _mesesCajaCache=null;
+async function resolverMesesCaja(){
+  if(_mesesCajaCache)return _mesesCajaCache;
+  if(MESES_CAJA_INDEX_SHEET_ID){
+    try{
+      const rows=await fetchSheetCSV(MESES_CAJA_INDEX_SHEET_ID);
+      const meses=rows.filter(r=>/^\d{4}-\d{2}$/.test((r[0]||'').trim())&&r[1]).map(r=>{
+        const[anio,mesNum]=r[0].trim().split('-');
+        return{m:MES_LABELS[parseInt(mesNum,10)-1],anio:parseInt(anio,10),id:r[1].trim(),gid:(r[2]||'').trim()||undefined};
+      });
+      if(meses.length){_mesesCajaCache=meses;return meses;}
+    }catch(e){/* si falla la planilla índice, cae al bootstrap de abajo */}
+  }
+  _mesesCajaCache=MESES_CAJA_BOOTSTRAP;
+  return MESES_CAJA_BOOTSTRAP;
+}
+function resolverMesCerradoYActual(meses,hoy){
+  hoy=hoy||new Date();
+  const mIdx=hoy.getMonth(),anio=hoy.getFullYear();
+  const mesCerradoIdx=mIdx===0?11:mIdx-1, anioCerrado=mIdx===0?anio-1:anio;
+  return{
+    actual:meses.find(x=>x.m===MES_LABELS[mIdx]&&x.anio===anio),
+    cerrado:meses.find(x=>x.m===MES_LABELS[mesCerradoIdx]&&x.anio===anioCerrado),
+    labelActual:MES_LABELS[mIdx]+' '+anio,
+    labelCerrado:MES_LABELS[mesCerradoIdx]+' '+anioCerrado
+  };
+}
+// Última fecha de la columna FECHA con movimientos reales — la Caja Diaria siempre se
+// carga con un día de rezago, así que "mes en curso" nunca asume "ayer" a ciegas.
+function ultimaFechaConDatos(movs){
+  let ultima=null;
+  for(const m of movs)if(m.fecha&&String(m.fecha).trim())ultima=String(m.fecha).trim();
+  return ultima;
+}
+// Categorías del dashboard de Caja (composición ingresos/egresos) — mismo criterio de
+// entCuenta/salCuenta que mapIngresoCategoria/mapEgresoCategoria del P&L más abajo, pero
+// con el detalle más fino que ya usaban estos gráficos (separa bancarios de impuestos,
+// comisiones de cursos de honorarios, etc.) en vez de las categorías más gruesas del P&L.
+// REGLA (confirmada con João 2026-07-13): ingreso real de Caja Diaria = SOLO Cobros
+// sedes + Cobros directos — plata que efectivamente cobró la institución. Todo lo
+// demás NO es ingreso real:
+//   - "interno": rescate del FCI ("Rescate inversión") y traspasos entre cuentas
+//     propias ("De MP a Santander/BBVA", patrón "De X a Y") — es plata que ya estaba
+//     contada, moviéndose de un bolsillo propio a otro, nunca cobro nuevo.
+//   - "sin_clasificar": todo lo que no es explícitamente Cobros sedes/directos ni un
+//     traspaso interno reconocible (ej. "MP Entradas" — a veces es cobro real vía
+//     Mercado Pago, a veces es un retiro de MP hacia la caja para pagar algo, y hoy no
+//     hay forma de distinguirlos por la fila sola — más filas sin la columna Cuenta
+//     completada por la administrativa, tipo UCASAL/Buco/Potenciar/Alquiler). No se
+//     cuenta como ingreso real, pero tampoco se esconde: se muestra aparte para que se
+//     pueda revisar y re-clasificar a mano.
+// NUNCA usar la celda "Entradas Reales" de la planilla para el ingreso real: se
+// confirmó con datos reales de junio y julio que es idéntica a "TOTAL ENTRADAS" (sí
+// excluye "MP Entradas" pero no excluye el rescate del FCI).
+function clasificarIngresoCajaDash(mv){
+  const c=(mv.entCuenta||'').toLowerCase();
+  const d=(mv.entDesc||'').toLowerCase();
+  if(/rescate.*inversi[oó]n/.test(c))return{tipo:'interno',cat:'Rescate FCI'};
+  if(/^de\s.+\sa\s/.test(d))return{tipo:'interno',cat:'Traspaso entre cuentas propias'};
+  if(c.includes('sedes'))return{tipo:'real',cat:'Cobros sedes'};
+  if(c.includes('directo'))return{tipo:'real',cat:'Cobros directos'};
+  // Confirmado con João (2026-07-13): "MP Entradas" es mayormente cobro real (cuotas
+  // pagadas vía Mercado Pago) — cuenta como ingreso real. El caso "sacaron plata de MP
+  // para pagar algo" ya se excluye aparte arriba, vía el patrón "De X a Y" (traspaso a
+  // otra cuenta propia), así que no hay doble conteo.
+  if(/^mp entrada/.test(c))return{tipo:'real',cat:'Mercado Pago'};
+  return{tipo:'sin_clasificar',cat:'Sin clasificar'};
+}
+function mapEgresoCajaDash(mv){
+  const c=(mv.salCuenta||'').toLowerCase(),d=(mv.salDesc||'').toLowerCase();
+  if(/^a inversi[oó]n$/.test(c))return null;
+  if(c.includes('sueldo'))return'Sueldos';
+  if(d.includes('afip')||d.includes('ganancias')||d.includes('ips ')||d.includes('saeoep')||c.includes('impuesto'))return'Impuestos';
+  if(c.includes('comisi'))return'Comis. cursos';
+  if(c.includes('honorario'))return'Honorarios';
+  if(c.includes('alquiler'))return'Alquiler';
+  if(c.includes('moratoria'))return'Moratorias';
+  if(c.includes('public'))return'Publicidad';
+  if(c.includes('particip'))return'Participación';
+  if(c.includes('banc')||c.includes('gastos mp'))return'Bancarios';
+  if(c.includes('servicio'))return'Servicios';
+  return'Otros';
+}
+function categorizarParaDashboard(movs){
+  // ing: solo lo que cuenta como ingreso real (Cobros sedes/directos) + Sin_clasificar
+  // (visible, pero fuera del total real). ingresosReales / sinClasificar / interno
+  // quedan aparte, ya sumados, para no tener que recalcular en cada lugar que los usa.
+  const ing={Cobros_sedes:0,Cobros_directos:0,Mercado_Pago:0,Sin_clasificar:0};
+  const egr={Sueldos:0,Impuestos:0,Comis_cursos:0,Honorarios:0,Alquiler:0,Moratorias:0,Publicidad:0,Participacion:0,Bancarios:0,Servicios:0,Otros:0};
+  const key=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z]/g,'_');
+  let ingresosReales=0,sinClasificar=0,internoDetalle={};
+  movs.forEach(mv=>{
+    if(mv.entImporte){
+      const{tipo,cat}=clasificarIngresoCajaDash(mv);
+      if(tipo==='real'){ing[key(cat)]=(ing[key(cat)]||0)+mv.entImporte;ingresosReales+=mv.entImporte;}
+      else if(tipo==='sin_clasificar'){ing.Sin_clasificar+=mv.entImporte;sinClasificar+=mv.entImporte;}
+      else{internoDetalle[cat]=(internoDetalle[cat]||0)+mv.entImporte;}
+    }
+    if(mv.salImporte){const cat=mapEgresoCajaDash(mv);if(cat)egr[key(cat)]=(egr[key(cat)]||0)+mv.salImporte;}
+  });
+  return{ing,egr,ingresosReales,sinClasificar,internoDetalle};
+}
+
 async function loadFci(){
   const syncLbl=document.getElementById('fciSyncLbl');
   try{
@@ -1140,10 +1262,17 @@ async function loadResumenEjecutivo(btn){
   let liveCount=0;
   let cajaSaldo=null,cajaResultado=null;
   try{
-    const rows=await fetchSheetCSV('10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I');
+    // Mismo mes "en curso" que resuelve la sección Caja Diaria (ver resolverMesesCaja) —
+    // antes esta tarjeta tenía el sheetId de junio pisado a mano, mostrando un mes viejo
+    // como si fuera "mes en curso".
+    const meses=await resolverMesesCaja();
+    const{actual}=resolverMesCerradoYActual(meses);
+    if(!actual)throw new Error('mes en curso sin sheetId todavía');
+    const rows=await fetchSheetCSV(actual.id,actual.gid);
     const p=parseCajaCSV(rows);
+    const cats=categorizarParaDashboard(p.movs);
     cajaSaldo=p.saldoActual;
-    cajaResultado=(p.entradasReales!==null&&p.salidasReales!==null)?(p.entradasReales-p.salidasReales):null;
+    cajaResultado=(p.salidasReales!==null)?(cats.ingresosReales-p.salidasReales):null;
     document.getElementById('resCajaSaldo').textContent=fm(cajaSaldo);
     document.getElementById('resCajaSub').innerHTML=cajaResultado!==null?`Resultado del mes: <strong style="color:${cajaResultado>=0?'#16a34a':'#dc2626'}">${cajaResultado>=0?'+':''}${fm(cajaResultado)}</strong>`:'Sin datos de resultado';
     liveCount++;
@@ -1347,98 +1476,6 @@ function renderCaja(d,label,fileId){
   document.getElementById('cajaContent').innerHTML=html;
 }
 
-// ════════════ MES CERRADO / MES EN CURSO — resolución automática ════════════
-// Ya no se hardcodea "el mes cerrado es MAY" a mano: se calcula solo a partir de la
-// fecha de hoy. MESES_CAJA_INDEX_SHEET_ID (cuando João la cree) es una planilla simple
-// con una fila por mes (columna A "AAAA-MM", columna B = sheetId, columna C = gid
-// opcional) — mientras no exista, se usa MESES_CAJA_BOOTSTRAP a mano, que es exactamente
-// lo mismo que había antes (un array editado a mano cada mes), así que hoy no se pierde
-// nada. En cuanto João pase el ID de esa planilla, cambiar MESES_CAJA_INDEX_SHEET_ID acá
-// abajo y listo — deja de hacer falta tocar este array nunca más.
-const MES_LABELS=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-const MESES_CAJA_INDEX_SHEET_ID=null; // pendiente: pasarle el ID de la planilla índice acá
-const MESES_CAJA_BOOTSTRAP=[
-  {m:'ENE',anio:2026,id:'1JElUN05dxwGmFBvgrRrBblb33moFcl-PueVUEPKxRGs'},
-  {m:'FEB',anio:2026,id:'1hkGq2A7UWs1m8f7UcVGJHIdARA3g1KF59NriIizrEKo'},
-  {m:'MAR',anio:2026,id:'1rmk9M7lVBJfcQKmJRanFW6lNXCvJPGq7aE3pubfDRSA'},
-  {m:'ABR',anio:2026,id:'1MfeZV6_3rof1xzx6KJZoKzA96a8pLOVySvmK1sHKoUk'},
-  {m:'MAY',anio:2026,id:'1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8'},
-  {m:'JUN',anio:2026,id:'10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I'},
-  {m:'JUL',anio:2026,id:'13Vv10pwm_586veWBAX2ezPPA0xGyQ6IdZl2jMbrhjL8'}
-];
-let _mesesCajaCache=null;
-async function resolverMesesCaja(){
-  if(_mesesCajaCache)return _mesesCajaCache;
-  if(MESES_CAJA_INDEX_SHEET_ID){
-    try{
-      const rows=await fetchSheetCSV(MESES_CAJA_INDEX_SHEET_ID);
-      const meses=rows.filter(r=>/^\d{4}-\d{2}$/.test((r[0]||'').trim())&&r[1]).map(r=>{
-        const[anio,mesNum]=r[0].trim().split('-');
-        return{m:MES_LABELS[parseInt(mesNum,10)-1],anio:parseInt(anio,10),id:r[1].trim(),gid:(r[2]||'').trim()||undefined};
-      });
-      if(meses.length){_mesesCajaCache=meses;return meses;}
-    }catch(e){/* si falla la planilla índice, cae al bootstrap de abajo */}
-  }
-  _mesesCajaCache=MESES_CAJA_BOOTSTRAP;
-  return MESES_CAJA_BOOTSTRAP;
-}
-function resolverMesCerradoYActual(meses,hoy){
-  hoy=hoy||new Date();
-  const mIdx=hoy.getMonth(),anio=hoy.getFullYear();
-  const mesCerradoIdx=mIdx===0?11:mIdx-1, anioCerrado=mIdx===0?anio-1:anio;
-  return{
-    actual:meses.find(x=>x.m===MES_LABELS[mIdx]&&x.anio===anio),
-    cerrado:meses.find(x=>x.m===MES_LABELS[mesCerradoIdx]&&x.anio===anioCerrado),
-    labelActual:MES_LABELS[mIdx]+' '+anio,
-    labelCerrado:MES_LABELS[mesCerradoIdx]+' '+anioCerrado
-  };
-}
-// Última fecha de la columna FECHA con movimientos reales — la Caja Diaria siempre se
-// carga con un día de rezago, así que "mes en curso" nunca asume "ayer" a ciegas.
-function ultimaFechaConDatos(movs){
-  let ultima=null;
-  for(const m of movs)if(m.fecha&&String(m.fecha).trim())ultima=String(m.fecha).trim();
-  return ultima;
-}
-// Categorías del dashboard de Caja (composición ingresos/egresos) — mismo criterio de
-// entCuenta/salCuenta que mapIngresoCategoria/mapEgresoCategoria del P&L más abajo, pero
-// con el detalle más fino que ya usaban estos gráficos (separa bancarios de impuestos,
-// comisiones de cursos de honorarios, etc.) en vez de las categorías más gruesas del P&L.
-function mapIngresoCajaDash(mv){
-  const c=(mv.entCuenta||'').toLowerCase();
-  if(/rescate.*inversi[oó]n/.test(c))return null;
-  if(c.includes('sedes'))return'Cobros sedes';
-  if(c.includes('directo'))return'Cobros directos';
-  if(/mercado pago|^mp$/.test(c))return'Mercado Pago';
-  if(c.includes('ucasal'))return'UCASAL';
-  if(c.includes('terciario'))return'Terciarios';
-  return'Otros';
-}
-function mapEgresoCajaDash(mv){
-  const c=(mv.salCuenta||'').toLowerCase(),d=(mv.salDesc||'').toLowerCase();
-  if(/^a inversi[oó]n$/.test(c))return null;
-  if(c.includes('sueldo'))return'Sueldos';
-  if(d.includes('afip')||d.includes('ganancias')||d.includes('ips ')||d.includes('saeoep')||c.includes('impuesto'))return'Impuestos';
-  if(c.includes('comisi'))return'Comis. cursos';
-  if(c.includes('honorario'))return'Honorarios';
-  if(c.includes('alquiler'))return'Alquiler';
-  if(c.includes('moratoria'))return'Moratorias';
-  if(c.includes('public'))return'Publicidad';
-  if(c.includes('particip'))return'Participación';
-  if(c.includes('banc')||c.includes('gastos mp'))return'Bancarios';
-  if(c.includes('servicio'))return'Servicios';
-  return'Otros';
-}
-function categorizarParaDashboard(movs){
-  const ing={Cobros_sedes:0,Cobros_directos:0,Mercado_Pago:0,UCASAL:0,Terciarios:0,Otros:0};
-  const egr={Sueldos:0,Impuestos:0,Comis_cursos:0,Honorarios:0,Alquiler:0,Moratorias:0,Publicidad:0,Participacion:0,Bancarios:0,Servicios:0,Otros:0};
-  const key=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z]/g,'_');
-  movs.forEach(mv=>{
-    if(mv.entImporte){const cat=mapIngresoCajaDash(mv);if(cat)ing[key(cat)]=(ing[key(cat)]||0)+mv.entImporte;}
-    if(mv.salImporte){const cat=mapEgresoCajaDash(mv);if(cat)egr[key(cat)]=(egr[key(cat)]||0)+mv.salImporte;}
-  });
-  return{ing,egr};
-}
 const FALLBACK_ABR26 = {
   ingOp: 81977912.70, salidas: 65827952.46, resultado: 16149960.24,
   fciRescate: 25000000, aFondo: 45999999.96,
@@ -1477,13 +1514,18 @@ function renderCajaDashboard(d,opts){
       <div class="bank-card"><div class="bank-card-lbl">MP Wallet</div><div class="bank-card-val o">${fm(d.mp)}</div></div>
     </div>
     <div class="row col2">
-      <div class="card"><div class="card-title">Composición de ingresos <span class="card-note">Operativos · ${fm(d.ingOp)}</span></div><div style="height:205px;"><canvas id="chartCajaIng${sfx}"></canvas></div></div>
+      <div class="card"><div class="card-title">Composición de ingresos <span class="card-note">Reales (sedes + directos) · ${fm(d.ingOp)}</span></div><div style="height:205px;"><canvas id="chartCajaIng${sfx}"></canvas></div></div>
       <div class="card"><div class="card-title">Composición de egresos <span class="card-note">Salidas reales · ${fm(d.salidas)}</span></div><div style="height:205px;"><canvas id="chartCajaEgr${sfx}"></canvas></div></div>
-    </div>`;
+    </div>
+    ${(d.sinClasificar||d.internoDetalle&&Object.keys(d.internoDetalle).length)?`<div style="margin-top:10px;padding:10px 14px;background:#fffbeb;border:0.5px solid rgba(217,119,6,0.25);border-radius:10px;font-size:0.72rem;color:#92400e;">
+      <strong>No cuentan como ingreso real este mes:</strong>
+      ${d.sinClasificar?`${fm(d.sinClasificar)} sin clasificar (fila sin cuenta asignada, ej. MP Entradas, UCASAL, u otras — revisar con administración)`:''}
+      ${d.internoDetalle&&Object.keys(d.internoDetalle).length?(d.sinClasificar?' · ':'')+Object.entries(d.internoDetalle).map(([k,v])=>`${k}: ${fm(v)}`).join(' · '):''}
+    </div>`:''}`;
   const ing=d.ing||{},egr=d.egr||{},toM=v=>(v||0)/1e6;
   if(_chartsCaja['ing'+sfx])_chartsCaja['ing'+sfx].destroy();
   if(_chartsCaja['egr'+sfx])_chartsCaja['egr'+sfx].destroy();
-  _chartsCaja['ing'+sfx]=new Chart(document.getElementById('chartCajaIng'+sfx),{type:'doughnut',data:{labels:['Cobros sedes','Cobros directos','Mercado Pago','UCASAL','Terciarios','Otros'],datasets:[{data:[toM(ing.Cobros_sedes),toM(ing.Cobros_directos),toM(ing.Mercado_Pago),toM(ing.UCASAL),toM(ing.Terciarios),toM(ing.Otros)],backgroundColor:['#3b82f6','#0ea5e9','#06b6d4','#a78bfa','#f472b6','#94a3b8'],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{padding:6,usePointStyle:true,boxWidth:8,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: $${ctx.parsed.toFixed(1)}M`}}}}});
+  _chartsCaja['ing'+sfx]=new Chart(document.getElementById('chartCajaIng'+sfx),{type:'doughnut',data:{labels:['Cobros sedes','Cobros directos','Mercado Pago','Sin clasificar'],datasets:[{data:[toM(ing.Cobros_sedes),toM(ing.Cobros_directos),toM(ing.Mercado_Pago),toM(ing.Sin_clasificar)],backgroundColor:['#3b82f6','#0ea5e9','#06b6d4','#cbd5e1'],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{padding:6,usePointStyle:true,boxWidth:8,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: $${ctx.parsed.toFixed(1)}M`}}}}});
   _chartsCaja['egr'+sfx]=new Chart(document.getElementById('chartCajaEgr'+sfx),{type:'doughnut',data:{labels:['Sueldos','Impuestos','Comis. cursos','Honorarios','Alquiler','Moratorias','Publicidad','Participación','Bancarios','Servicios','Otros'],datasets:[{data:[toM(egr.Sueldos),toM(egr.Impuestos),toM(egr.Comis_cursos),toM(egr.Honorarios),toM(egr.Alquiler),toM(egr.Moratorias),toM(egr.Publicidad),toM(egr.Participacion),toM(egr.Bancarios),toM(egr.Servicios),toM(egr.Otros)],backgroundColor:['#ef4444','#f97316','#f59e0b','#eab308','#22c55e','#6366f1','#ec4899','#14b8a6','#38bdf8','#a78bfa','#94a3b8'],borderColor:'#fff',borderWidth:2,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{padding:5,usePointStyle:true,boxWidth:8,font:{size:10}}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: $${ctx.parsed.toFixed(1)}M`}}}}});
 }
 // tipo: 'cerrado' (último mes calendario ya terminado, estable) | 'actual' (mes en curso,
@@ -1510,7 +1552,9 @@ async function loadMesCajaDashboard(tipo){
     const rows=await fetchSheetCSV(info.id,info.gid);
     const p=parseCajaCSV(rows);
     const cats=categorizarParaDashboard(p.movs);
-    const ingOp=p.entradasReales!==null?p.entradasReales:null;
+    // Ingreso real SIEMPRE calculado de los movimientos (cats.ingresosReales), nunca de
+    // la celda "Entradas Reales" de la planilla — ver nota en clasificarIngresoCajaDash.
+    const ingOp=cats.ingresosReales;
     const salidas=p.salidasReales!==null?p.salidasReales:null;
     renderCajaDashboard({
       ingOp,salidas,
@@ -1519,7 +1563,8 @@ async function loadMesCajaDashboard(tipo){
       aFondo:p.invFondo,
       santander:p.santander,bbva8:p.bbva8,efectivo:p.efectivo,
       mp:p.mp,saldoCaja:p.saldoActual,
-      ing:cats.ing,egr:cats.egr
+      ing:cats.ing,egr:cats.egr,
+      sinClasificar:cats.sinClasificar,internoDetalle:cats.internoDetalle
     },{suffix:sfx});
     const fmAg=v=>{if(v===null||v===undefined)return'—';return(v>=0?'+':'')+'$'+(v/1e6).toFixed(1)+'M';};
     const resultado=(ingOp!==null&&salidas!==null)?(ingOp-salidas):null;
@@ -1843,6 +1888,9 @@ function mapIngresoCategoria(mv){
   const c=(mv.entCuenta||'').toLowerCase(),d=(mv.entDesc||'').toLowerCase();
   if(/rescate.*inversi[oó]n/.test(c))return null;
   if(/saldo anterior/i.test(mv.entDesc||''))return null;
+  if(/^de\s.+\sa\s/.test(d))return null; // traspaso entre cuentas propias, no ingreso
+  // "MP Entradas" es cobro real (confirmado con João) — cae en Bachillerato por
+  // default más abajo, ya que en el P&L no se distingue por medio de cobro.
   if(c.includes('ucasal'))return'UCASAL';
   if(c.includes('terciario'))return'Terciarios';
   if(d.includes('telemátic')||d.includes('telematic')||c.includes('empresa')||d.includes('in company')||d.includes('incompany'))return'Empresas';
@@ -1968,7 +2016,11 @@ async function loadPL26(btn){
       });
       const ingTot=Object.values(ing).reduce((a,b)=>a+b,0);
       const egrTot=Object.values(egr).reduce((a,b)=>a+b,0);
-      const ingresos=p.entradasReales!==null&&p.entradasReales>0?p.entradasReales:ingTot;
+      // Ingresos SIEMPRE de ingTot (sumado de movimientos, excluyendo rescate FCI/
+      // traspasos internos/MP sin confirmar) — nunca de "Entradas Reales" de la
+      // planilla, que se confirmó que no excluye el rescate del FCI (ver
+      // clasificarIngresoCajaDash más arriba para el detalle completo de la regla).
+      const ingresos=ingTot;
       const egresos=p.salidasReales!==null&&p.salidasReales>0?p.salidasReales:egrTot;
       return{m:mo.m,ingresos,egresos,ing,egr,parcial:!!(mesActualInfo&&mo.m===mesActualInfo.m&&mo.anio===mesActualInfo.anio)};
     }));
