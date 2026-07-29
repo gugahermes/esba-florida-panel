@@ -195,7 +195,7 @@ body{background:var(--bg);color:var(--text-1);font-family:'IBM Plex Sans',-apple
 
 /* ── CARDS ── */
 .row{display:grid;gap:12px;margin-bottom:12px;}
-.col1{grid-template-columns:1fr;}.col2{grid-template-columns:1fr 1fr;}.col3{grid-template-columns:1.6fr 1fr 1fr;}
+.col1{grid-template-columns:1fr;}.col2{grid-template-columns:1fr 1fr;}.col3{grid-template-columns:1.6fr 1fr 1fr;}.col4{grid-template-columns:repeat(4,1fr);}
 .card{background:var(--surface);border:0.5px solid rgba(28,25,23,0.07);border-radius:14px;padding:20px 22px;}
 .card-title{font-size:var(--fs-1);font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
 .res-card{transition:box-shadow .25s var(--ease-spring),transform .25s var(--ease-spring);}
@@ -353,13 +353,18 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 .exec-mode .card{padding:12px 16px;}
 
 /* ── RESPONSIVE ── */
+/* Las 4 hero cards necesitan su propio punto de quiebre antes que el resto del grid:
+   a 44px de fuente (--fs-11), 4 en línea se aprietan bastante antes de llegar a 900px. */
+@media(max-width:1200px){
+  .col4{grid-template-columns:repeat(2,1fr);gap:14px;}
+}
 @media(max-width:900px){
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
   .kpi-grid-4{grid-template-columns:repeat(2,1fr);}
   .kpi-grid-6{grid-template-columns:repeat(2,1fr);}
   .drive-grid{grid-template-columns:repeat(2,1fr);}
   .bank-row{grid-template-columns:repeat(2,1fr);}
-  .col2,.col3{grid-template-columns:1fr;}
+  .col2,.col3,.col4{grid-template-columns:1fr;}
   .sim-top{grid-template-columns:1fr;}
   .scen-grid{grid-template-columns:1fr;}
 }
@@ -477,15 +482,24 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 
 <div style="font-size:0.68rem;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Agenda del Comité de Gestión — página 1</div>
-<div class="kpi-grid-6" style="margin-bottom:18px;">
-  <div class="agenda-card"><div class="agenda-lbl">Resultado mes cerrado</div><div class="agenda-val" id="agResultadoCerrado">—</div><div class="agenda-sub" id="agResultadoCerradoSub">Cargando...</div></div>
+<div class="kpi-grid" style="margin-bottom:18px;">
   <div class="agenda-card"><div class="agenda-lbl">Avance mes en curso</div><div class="agenda-val" id="agAvanceActual">—</div><div class="agenda-sub" id="agAvanceActualSub">Cargando...</div></div>
   <div class="agenda-card"><div class="agenda-lbl">P&amp;L acumulado 2026</div><div class="agenda-val" id="agPLAcumulado">—</div><div class="agenda-sub" id="agPLAcumuladoSub">Cargando...</div></div>
   <div class="agenda-card"><div class="agenda-lbl">Inscripciones vs meta</div><div class="agenda-val" id="agRitmoInscripciones">—</div><div class="agenda-sub" id="agRitmoInscripcionesSub">Cargando...</div></div>
   <div class="agenda-card"><div class="agenda-lbl">Publicidad vs CPI</div><div class="agenda-val" id="agPublicidadCPI">—</div><div class="agenda-sub" id="agPublicidadCPISub">Cargando...</div></div>
   <div class="agenda-card"><div class="agenda-lbl">Saldo FCI</div><div class="agenda-val" id="agSaldoFCI">—</div><div class="agenda-sub" id="agSaldoFCISub">Cargando...</div></div>
 </div>
-<div class="row col3" style="margin-bottom:14px;">
+<!-- 4 hero cards, mismo tratamiento visual (44px + "Ver detalle") — "Resultado mes cerrado"
+     salió de la Agenda (arriba) para vivir acá, y "Alumnos Activos Totales" se separó de la
+     vieja card combinada "Sedes e inscriptos" (los inscriptos nuevos siguen visibles en la
+     Agenda de arriba y en el detalle de Sedes). -->
+<div class="row col4" style="margin-bottom:14px;">
+  <div class="card res-card">
+    <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--azul)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg></span>Resultado del mes</span><span class="card-note" id="resResultadoMesNote">mes cerrado</span></div>
+    <div class="kpi-val-xl" id="resResultadoMes">—</div>
+    <div class="kpi-sub" id="resResultadoMesSub">Cargando...</div>
+    <button class="hbtn" style="margin-top:12px;" onclick="sbNav('sec-caja',null)">Ver detalle →</button>
+  </div>
   <div class="card res-card">
     <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--azul)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="10" width="18" height="9" rx="1"/><path d="M3 10l9-6 9 6"/><line x1="3" y1="19" x2="21" y2="19"/></svg></span>Caja diaria</span><span class="card-note">mes en curso</span></div>
     <div class="kpi-val-xl" id="resCajaSaldo">—</div>
@@ -499,9 +513,9 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <button class="hbtn" style="margin-top:12px;" onclick="sbNav('sec-fci',null)">Ver detalle →</button>
   </div>
   <div class="card res-card">
-    <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--azul)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg></span>Sedes e inscriptos</span><span class="card-note">2026</span></div>
-    <div class="kpi-val-xl" id="resInscriptos">—</div>
-    <div class="kpi-sub" id="resInscriptosSub">Cargando...</div>
+    <div class="card-title"><span class="res-title-row"><span class="res-icon" style="color:var(--azul)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg></span>Alumnos Activos Totales</span><span class="card-note">2026</span></div>
+    <div class="kpi-val-xl" id="resActivosTotales">—</div>
+    <div class="kpi-sub" id="resActivosTotalesSub">Cargando...</div>
     <button class="hbtn" style="margin-top:12px;" onclick="sbNav('sec-sedes',null)">Ver detalle →</button>
   </div>
 </div>
@@ -1314,18 +1328,26 @@ async function loadResumenEjecutivo(btn){
   const liquidezTotal=(cajaSaldo||0)+(fciSaldo||0);
   document.getElementById('resLiquidez').textContent=fm(liquidezTotal);
   document.getElementById('resLiquidezSub').textContent=`FCI ${fm(fciSaldo)} + Caja ${fm(cajaSaldo)}`;
-  let nuevosCerrados=null,activosUltimo=null,cantSedes=null;
+  let activosUltimo=null;
   try{
-    const{sedes}=await fetchSedes26Data();
-    nuevosCerrados=sedes.reduce((s,x)=>s+(x.b1n||0)+(x.b2n||0)+(x.b3n||0),0);
+    const{sedes,y2025}=await fetchSedes26Data();
     activosUltimo=sedes.reduce((s,x)=>s+(x.b3a||0),0);
-    cantSedes=sedes.length;
-    document.getElementById('resInscriptos').textContent=nuevosCerrados.toLocaleString('es-AR');
-    document.getElementById('resInscriptosSub').textContent=activosUltimo.toLocaleString('es-AR')+' alumnos activos · '+cantSedes+' sedes/CADs';
+    const activos2025Mismo=y2025?y2025.b3a:null;
+    const valEl=document.getElementById('resActivosTotales'),subEl=document.getElementById('resActivosTotalesSub');
+    valEl.textContent=activosUltimo.toLocaleString('es-AR');
+    if(activos2025Mismo){
+      const diffA=activosUltimo-activos2025Mismo,pctA=Math.round(diffA/activos2025Mismo*100);
+      const color=diffA>=0?'#16a34a':'#dc2626';
+      valEl.className='kpi-val-xl '+(diffA>=0?'pos':'neg');
+      subEl.innerHTML=`Último bimestre cerrado · <strong style="color:${color}">${diffA>=0?'▲ +':'▼ −'}${Math.abs(diffA).toLocaleString('es-AR')} vs 2025 (${pctA>=0?'+':''}${pctA}%)</strong>`;
+    }else{
+      valEl.className='kpi-val-xl';
+      subEl.textContent='Último bimestre cerrado';
+    }
     liveCount++;
   }catch(e){
-    document.getElementById('resInscriptos').textContent='—';
-    document.getElementById('resInscriptosSub').textContent='Sin conexión — ver detalle abajo';
+    document.getElementById('resActivosTotales').textContent='—';
+    document.getElementById('resActivosTotalesSub').textContent='Sin conexión — ver detalle abajo';
   }
   syncLbl.textContent=liveCount===3?'🟢 Datos en vivo · Google Sheets':(liveCount>0?'🟡 Datos parciales · Google Sheets':'📋 Sin conexión');
   syncLbl.classList[liveCount===3?'add':'remove']('live');
@@ -1560,8 +1582,8 @@ async function loadMesCajaDashboard(tipo){
     const cont0=document.getElementById('cajaDashboard'+sfx);
     if(cont0)cont0.innerHTML=`<div class="caja-yr-panel"><h3>⏳ ${label} pendiente</h3><p>Falta el ID de la planilla de Caja de este mes en <code>MESES_CAJA_BOOTSTRAP</code>. En cuanto se agregue, esta vista se completa sola.</p></div>`;
     if(syncEl){syncEl.textContent='⏳ Pendiente de sheetId';syncEl.classList.remove('live');}
-    const agValP=document.getElementById(tipo==='actual'?'agAvanceActual':'agResultadoCerrado');
-    const agSubP=document.getElementById(tipo==='actual'?'agAvanceActualSub':'agResultadoCerradoSub');
+    const agValP=document.getElementById(tipo==='actual'?'agAvanceActual':'resResultadoMes');
+    const agSubP=document.getElementById(tipo==='actual'?'agAvanceActualSub':'resResultadoMesSub');
     if(agValP){agValP.textContent='⏳';agSubP.textContent=label+' pendiente de sheetId';}
     return;
   }
@@ -1599,8 +1621,8 @@ async function loadMesCajaDashboard(tipo){
       if(heroEl)heroEl.textContent=fm(p.saldoActual);
       if(lblEl2)lblEl2.textContent='Saldo cierre '+label;
       if(secEl)secEl.innerHTML=`Ingresos operativos <strong>${fm(ingOp)}</strong> · Egresos reales ${fm(salidas)} · Resultado <strong>${resultado!==null&&resultado>=0?'+':''}${fm(resultado)}</strong> · MP ${fm(p.mp)}`;
-      const agVal=document.getElementById('agResultadoCerrado'),agSub=document.getElementById('agResultadoCerradoSub');
-      if(agVal){agVal.textContent=fmAg(resultado);agSub.textContent=label;}
+      const agVal=document.getElementById('resResultadoMes'),agSub=document.getElementById('resResultadoMesSub');
+      if(agVal){agVal.textContent=fmAg(resultado);agVal.className='kpi-val-xl'+(resultado!==null?(resultado>=0?' pos':' neg'):'');agSub.textContent=label+' · cerrado';}
     }
   }catch(e){
     if(syncEl){syncEl.textContent='📋 Sin conexión';syncEl.classList.remove('live');}
