@@ -53,7 +53,7 @@ body{background:var(--bg);color:var(--text-1);font-family:'IBM Plex Sans',-apple
 /* Navy real de marca (mismo --azul-dark que la banda hero), no gris neutro genérico —
    pase de consistencia con el resto del Sprint (Guga: "todo el panel, no una franja aislada"). */
 .sidebar{width:210px;background:linear-gradient(180deg,var(--azul-dark) 0%,#10112c 100%);box-shadow:inset -1px 0 0 rgba(255,255,255,.05);display:flex;flex-direction:column;flex-shrink:0;position:relative;z-index:50;}
-.sb-brand{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.sb-brand{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.08);text-align:center;}
 .sb-logo-card{background:var(--surface);border-radius:10px;padding:10px 12px;display:inline-block;box-shadow:0 1px 3px rgba(0,0,0,0.35);}
 .sb-logo-card img{display:block;height:26px;width:auto;}
 .sb-logo{font-size:var(--fs-5);font-weight:600;color:#fff;letter-spacing:-.3px;line-height:1;}
@@ -629,7 +629,11 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <div class="tbl-title">Sedes · Nuevos y activos por bimestre · 2026</div>
     <div class="tbl-note">Estado de pago: ver planilla "Cuenta Corriente Centros" (no incluido en esta vista en vivo)</div>
   </div>
-  <div class="tbl-wrap"><table id="tableSedes26"></table></div>
+  <div id="sedesExtremes" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;"></div>
+  <details>
+    <summary style="cursor:pointer;font-weight:700;color:var(--azul);">Ver las 19 sedes completas →</summary>
+    <div class="tbl-wrap" style="margin-top:10px;"><table id="tableSedes26"></table></div>
+  </details>
 </div>
 
 <!-- DRIVE ACCESS CARDS -->
@@ -1930,6 +1934,22 @@ function renderSedesSection(sedes,y2025){
 
   const t=document.getElementById('tableSedes26');
   const dash=v=>(v===null||v===undefined)?'—':v;
+
+  // Sedes con peor variación (activos ABR-MAY vs FEB-MAR, los últimos dos bimestres
+  // cerrados) — mismo patrón que el ranking CPI de Marketing: extremos siempre
+  // visibles, tabla completa (19 sedes) colapsada detrás de <details>.
+  const extremesEl=document.getElementById('sedesExtremes');
+  if(extremesEl){
+    const conVariacion=sedes.filter(s=>s.b2a!=null&&s.b3a!=null).map(s=>({...s,delta:(s.b3a||0)-(s.b2a||0)}));
+    const peores=[...conVariacion].sort((a,b)=>a.delta-b.delta).slice(0,4).filter(s=>s.delta<0);
+    const mini=s=>`<div style="flex:1;min-width:160px;padding:10px 14px;border-radius:10px;background:rgba(239,68,68,0.08);border-left:3px solid #dc2626;">
+      <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#dc2626;">⚠️ Mayor caída de activos</div>
+      <div style="font-weight:700;font-size:0.82rem;margin-top:2px;">${s.n}</div>
+      <div style="font-size:0.72rem;color:var(--text-3);">${s.delta} vs FEB-MAR · ${s.b3a} activos ABR-MAY</div>
+    </div>`;
+    extremesEl.innerHTML=peores.length?peores.map(mini).join(''):'<div style="font-size:0.72rem;color:var(--text-3);">Ninguna sede con caída de activos entre FEB-MAR y ABR-MAY.</div>';
+  }
+
   let h=`<thead><tr><th rowspan="2">Sede</th><th class="tc grp" colspan="2">DIC-ENE</th><th class="tc grp" colspan="2">FEB-MAR</th><th class="tc grp" colspan="2">ABR-MAY</th><th class="tc grp" colspan="2">JUN-JUL*</th><th class="tr" rowspan="2">Total cerrado</th></tr><tr><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th></tr></thead><tbody>`;
   const sorted=[...sedes].sort((a,b)=>((b.b1n||0)+(b.b2n||0)+(b.b3n||0)+(b.b4n||0))-((a.b1n||0)+(a.b2n||0)+(a.b3n||0)+(a.b4n||0)));
   let t1n=0,t1a=0,t2n=0,t2a=0,t3n=0,t3a=0,t4n=0,t4a=0;
