@@ -375,7 +375,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 
 /* ── META ADS ── */
 .meta-live-bar{display:flex;align-items:center;gap:8px;background:rgba(38,39,110,0.04);border:0.5px solid rgba(38,39,110,0.15);border-radius:10px;padding:9px 14px;margin-bottom:14px;font-size:var(--fs-2);color:var(--azul);font-weight:500;}
-.meta-live-dot{width:6px;height:6px;border-radius:50%;background:#30d158;flex-shrink:0;animation:livepulse 2s infinite;}
+.meta-live-dot{width:6px;height:6px;border-radius:50%;background:#94a3b8;flex-shrink:0;}
 .meta-live-cta{margin-left:auto;background:var(--azul);color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:var(--fs-1);font-weight:500;cursor:pointer;font-family:inherit;transition:opacity .15s;}
 .meta-live-cta:hover{opacity:.85;}.meta-live-cta:disabled{opacity:.4;cursor:not-allowed;}
 .sem-g{color:var(--pos);font-weight:600;}.sem-y{color:var(--acc-amber);font-weight:600;}.sem-r{color:var(--neg);font-weight:600;}
@@ -917,11 +917,11 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <div class="insight-secondary">Meta genera &gt;80% leads a CPL $810 vs Google $4.800 · Sin acceso API directo: datos vía agencia Achalay (retraso 1 mes) · <strong>Riesgo:</strong> concentración 100% en Meta sin alternativa</div>
   </div>
 </div>
-<!-- ═══ META ADS · DATOS EN VIVO (7 cuentas) ═══ -->
+<!-- ═══ META ADS · snapshot manual, NO es fetch en vivo (7 cuentas) ═══ -->
 <div class="meta-live-bar">
   <div class="meta-live-dot"></div>
-  Dato clave · en vivo (últimos 30 días) — Meta Ads · 7 cuentas ESBA (2/6–1/7/2026)
-  <span style="color:var(--text-3);font-weight:400;font-size:var(--fs-1);margin-left:2px;">Datos en vivo · Meta Ads API · actualizado ahora</span>
+  Meta Ads · 7 cuentas ESBA · ventana 2/6–1/7/2026
+  <span style="color:var(--text-3);font-weight:400;font-size:var(--fs-1);margin-left:2px;">Datos al 1/7/2026 · actualización manual (no en vivo)</span>
 </div>
 <div class="kpi-grid-4" style="margin-bottom:12px;">
   <div class="kpi o"><div class="kpi-lbl">Invertido (30 días, 7 cuentas)</div><div class="kpi-val ora">$2.68M</div><div class="kpi-sub">ARS · todas las sedes con cuenta Meta</div></div>
@@ -1471,17 +1471,21 @@ async function loadResumenEjecutivo(btn){
   let activosUltimo=null;
   try{
     const{sedes,y2025}=await fetchSedes26Data();
-    activosUltimo=sedes.reduce((s,x)=>s+(x.b3a||0),0);
-    const activos2025Mismo=y2025?y2025.b3a:null;
+    // JUN-JUL (b4a, en curso) — antes usaba b3a (ABR-MAY, último cerrado), que
+    // quedó desalineado con la tarjeta "Alumnos activos" de Red de Sedes al
+    // cambiar esa a mostrar el bimestre en curso (2026-07-31). Mismo número en
+    // las dos secciones ahora, en vez de dos cifras distintas para "activos".
+    activosUltimo=sedes.reduce((s,x)=>s+(x.b4a||0),0);
+    const activos2025Mismo=y2025?y2025.b4a:null;
     const valEl=document.getElementById('resActivosTotales'),subEl=document.getElementById('resActivosTotalesSub');
     valEl.textContent=activosUltimo.toLocaleString('es-AR');
     if(activos2025Mismo){
       const diffA=activosUltimo-activos2025Mismo,pctA=Math.round(diffA/activos2025Mismo*100);
       valEl.className='kpi-val-xl '+(diffA>=0?'pos':'neg');
-      subEl.innerHTML=`Último bimestre cerrado · <span class="trend-pill ${diffA>=0?'pos':'neg'}"><span class="trend-dot"></span>${diffA>=0?'▲ +':'▼ −'}${Math.abs(diffA).toLocaleString('es-AR')} vs 2025 (${pctA>=0?'+':''}${pctA}%)</span>`;
+      subEl.innerHTML=`Bimestre en curso, parcial · <span class="trend-pill ${diffA>=0?'pos':'neg'}"><span class="trend-dot"></span>${diffA>=0?'▲ +':'▼ −'}${Math.abs(diffA).toLocaleString('es-AR')} vs 2025 (${pctA>=0?'+':''}${pctA}%)</span>`;
     }else{
       valEl.className='kpi-val-xl';
-      subEl.textContent='Último bimestre cerrado';
+      subEl.textContent='Bimestre en curso, parcial';
     }
     liveCount++;
   }catch(e){
