@@ -818,7 +818,8 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
       <button class="mo-tab" onclick="selectMonth('03','1rmk9M7lVBJfcQKmJRanFW6lNXCvJPGq7aE3pubfDRSA','MAR 2026')">MAR</button>
       <button class="mo-tab" onclick="selectMonth('04','1MfeZV6_3rof1xzx6KJZoKzA96a8pLOVySvmK1sHKoUk','ABR 2026')">ABR</button>
       <button class="mo-tab" onclick="selectMonth('05','1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8','MAY 2026')">MAY</button>
-      <button class="mo-tab active" onclick="selectMonth('06','10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I','JUN 2026')">JUN ◀ actual</button>
+      <button class="mo-tab" onclick="selectMonth('06','10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I','JUN 2026')">JUN</button>
+      <button class="mo-tab active" onclick="selectMonth('07','13Vv10pwm_586veWBAX2ezPPA0xGyQ6IdZl2jMbrhjL8','JUL 2026')">JUL ◀ último cerrado</button>
     </div>
   </div>
 
@@ -1449,17 +1450,27 @@ async function loadResumenEjecutivo(btn){
     // antes esta tarjeta tenía el sheetId de junio pisado a mano, mostrando un mes viejo
     // como si fuera "mes en curso".
     const meses=await resolverMesesCaja();
-    const{actual}=resolverMesCerradoYActual(meses);
-    if(!actual)throw new Error('mes en curso sin sheetId todavía');
-    const rows=await fetchSheetCSV(actual.id,actual.gid);
+    const{actual,cerrado,labelCerrado}=resolverMesCerradoYActual(meses);
+    // Si todavía no se cargó el sheetId del mes en curso en MESES_CAJA_BOOTSTRAP (pasa
+    // los primeros días de cada mes, hasta que se agrega a mano) esta tarjeta mostraba
+    // "Sin conexión" — indistinguible de un fallo real de red. Ahora cae al último mes
+    // CERRADO en vez de quedar en blanco, dejando claro que es un dato ya cerrado, no
+    // el mes en curso (encontrado y corregido 2026-08-08).
+    const info=actual||cerrado;
+    if(!info)throw new Error('ni mes en curso ni mes cerrado tienen sheetId todavía');
+    const rows=await fetchSheetCSV(info.id,info.gid);
     const p=parseCajaCSV(rows);
     cajaSaldo=p.saldoActual;
     cajaResultado=(p.entradasReales!==null&&p.salidasReales!==null)?(p.entradasReales-p.salidasReales):null;
     document.getElementById('resCajaSaldo').textContent=fm(cajaSaldo);
-    // Antes decía "Resultado del mes" — mismo rótulo que la card hero de al lado
-    // ("Resultado del mes", mes CERRADO), pero este es el mes EN CURSO, un número
-    // distinto. Se distingue el texto para que no se lean como el mismo dato.
-    document.getElementById('resCajaSub').innerHTML=cajaResultado!==null?`Resultado parcial (mes en curso): <strong style="color:${cajaResultado>=0?'#16a34a':'#dc2626'}">${cajaResultado>=0?'+':''}${fm(cajaResultado)}</strong>`:'Sin datos de resultado';
+    if(actual){
+      // Antes decía "Resultado del mes" — mismo rótulo que la card hero de al lado
+      // ("Resultado del mes", mes CERRADO), pero este es el mes EN CURSO, un número
+      // distinto. Se distingue el texto para que no se lean como el mismo dato.
+      document.getElementById('resCajaSub').innerHTML=cajaResultado!==null?`Resultado parcial (mes en curso): <strong style="color:${cajaResultado>=0?'#16a34a':'#dc2626'}">${cajaResultado>=0?'+':''}${fm(cajaResultado)}</strong>`:'Sin datos de resultado';
+    }else{
+      document.getElementById('resCajaSub').innerHTML=`${labelCerrado} (cerrado) · mes en curso pendiente de conectar${cajaResultado!==null?` · <strong style="color:${cajaResultado>=0?'#16a34a':'#dc2626'}">${cajaResultado>=0?'+':''}${fm(cajaResultado)}</strong>`:''}`;
+    }
     liveCount++;
   }catch(e){
     document.getElementById('resCajaSaldo').textContent='—';
@@ -1556,8 +1567,10 @@ function selectYear(yr){
   const moRow=document.getElementById('moTabsRow');
   if(yr==='2026'){
     moRow.style.display='block';
-    // Auto-load current month
-    selectMonth('05','1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8','MAY 2026');
+    // Auto-load último mes cerrado (antes decía "current month" pero tenía MAY
+    // hardcodeado, desactualizado hace 2 meses — corregido 2026-08-08, junto con el
+    // resto del rollover de mes de esta misma revisión).
+    selectMonth('07','13Vv10pwm_586veWBAX2ezPPA0xGyQ6IdZl2jMbrhjL8','JUL 2026');
   } else {
     moRow.style.display='none';
     const info=AÑOS_CAJAS[yr];
@@ -2188,7 +2201,7 @@ function renderPL26(months){
       <td class="bold">${mo.m}${mo.parcial?'<span style="font-size:0.58rem;color:#d97706;margin-left:4px;">parcial</span>':''}</td>
       <td class="tr num-i">$${(mo.ingresos/1e6).toFixed(1)}M</td>
       <td class="tr num-g">$${(mo.egresos/1e6).toFixed(1)}M</td>
-      <td class="tr ${r>=0?'num-p':'num-n'}">${r>=0?'+':''}$${Math.abs(r).toFixed(1)}M</td>
+      <td class="tr ${r>=0?'num-p':'num-n'}">${r>=0?'+':'-'}$${Math.abs(r).toFixed(1)}M</td>
       <td class="tr" style="color:#3b82f6;font-weight:600;">$${((mo.ing.Bachillerato||0)/1e6).toFixed(1)}M</td>
       <td class="tr" style="color:#0891b2;font-weight:600;">$${((mo.ing.Empresas||0)/1e6).toFixed(1)}M</td>
       <td class="tr" style="color:#7c3aed;font-weight:600;">$${((mo.ing.UCASAL||0)/1e6).toFixed(1)}M</td>
@@ -2204,7 +2217,7 @@ function renderPL26(months){
     <td>ACUM. ${closed.map(mo=>mo.m).join('-')}</td>
     <td class="tr num-i">$${(ti/1e6).toFixed(1)}M</td>
     <td class="tr num-g">$${(te/1e6).toFixed(1)}M</td>
-    <td class="tr ${tr2>=0?'num-p':'num-n'}">${tr2>=0?'+':''}$${Math.abs(tr2/1e6).toFixed(1)}M</td>
+    <td class="tr ${tr2>=0?'num-p':'num-n'}">${tr2>=0?'+':'-'}$${Math.abs(tr2/1e6).toFixed(1)}M</td>
     <td colspan="6" class="tr" style="color:#94a3b8;font-size:0.66rem">Ex-Empresas: ${((tr2-tEmpresas)>=0?'+':'')+'$'+((tr2-tEmpresas)/1e6).toFixed(1)}M</td>
   </tr></tfoot>`;
   t.innerHTML=h;
