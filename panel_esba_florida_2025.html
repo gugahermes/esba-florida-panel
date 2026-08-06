@@ -134,7 +134,7 @@ body{background:var(--bg);color:var(--text-1);font-family:'IBM Plex Sans',-apple
    con fondo sólido (var(--bg), el mismo del área de contenido) para tapar lo que pasa
    por debajo. z-index por encima de las tarjetas pero por debajo del sidebar/modal. */
 .sec-top{display:flex;align-items:flex-end;justify-content:space-between;padding:32px 0 18px;margin:0 0 24px;border-bottom:0.5px solid rgba(28,25,23,0.08);background:var(--bg);border-top:none;border-left:none;box-shadow:none;position:sticky;top:0;z-index:6;}
-.sec-top.fci-hdr,.sec-top.pl26-hdr,.sec-top.caja-hdr,.sec-top.sedes-hdr,.sec-top.fin-hdr,.sec-top.pub-hdr,.sec-top.sim-hdr{border-top:none;background:var(--bg);}
+.sec-top.fci-hdr,.sec-top.pl26-hdr,.sec-top.caja-hdr,.sec-top.sedes-hdr,.sec-top.fin-hdr,.sec-top.pub-hdr,.sec-top.sim-hdr,.sec-top.central-hdr{border-top:none;background:var(--bg);}
 .sec-top-icon{display:none;}
 .sec-top-text{flex:1;}
 .sec-top-title{font-size:var(--fs-8);font-weight:700;color:var(--text-1);letter-spacing:-.5px;line-height:1.1;}
@@ -444,6 +444,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
     <div class="sb-item" onclick="sbNav('sec-caja',this)"><span class="sb-label">Caja Diaria</span></div>
     <div class="sb-item" onclick="sbNav('sec-financiero',this)"><span class="sb-label">Cierre 2025</span></div>
     <div class="sb-section">Operativo</div>
+    <div class="sb-item" onclick="sbNav('sec-central',this)"><span class="sb-label">Sede Central</span></div>
     <div class="sb-item" onclick="sbNav('sec-publicidad',this)"><span class="sb-label">Marketing y Ventas</span></div>
     <div class="sb-item" onclick="sbNav('sec-simulador',this)"><span class="sb-label">Simulador</span></div>
   </div>
@@ -898,6 +899,40 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 
 <div class="sec-divider"></div>
+<!-- ════════════════════════ SEDE CENTRAL (OLIVOS) ════════ -->
+<div id="sec-central" style="scroll-margin-top:90px;">
+<div class="sec-top central-hdr">
+  <div class="sec-top-icon">🏛️</div>
+  <div class="sec-top-text">
+    <div class="sec-top-title">Sede Central · Olivos</div>
+    <div class="sec-top-sub" id="centralSecSub">Inscripciones por oferta educativa y vendedor</div>
+  </div>
+  <div class="sec-top-right">
+    <span class="fci-sync" id="centralSyncLbl">⏳ Cargando...</span>
+    <button class="refresh-btn" onclick="loadSedeCentral(this)" title="Recargar inscripciones de Sede Central desde el formulario">🔄 Actualizar Sede Central</button>
+  </div>
+</div>
+
+<div class="row col2" style="margin-bottom:14px;">
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <div class="tbl-title">Inscriptos por oferta educativa</div>
+      <div class="tbl-note" id="centralOfertaNote">Cargando...</div>
+    </div>
+    <div class="tbl-wrap"><table id="tableCentralOferta"></table></div>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <div class="tbl-title">Inscriptos por vendedor</div>
+      <div class="tbl-note" id="centralVendedorNote">Cargando...</div>
+    </div>
+    <div class="tbl-wrap"><table id="tableCentralVendedor"></table></div>
+    <div id="centralRematriculacionNote" style="margin-top:10px;font-size:0.72rem;color:var(--text-3);"></div>
+  </div>
+</div>
+</div>
+
+<div class="sec-divider"></div>
 <!-- ════════════════════════ PUBLICIDAD ════════ -->
 <div id="sec-publicidad" style="scroll-margin-top:90px;">
 <div class="sec-top pub-hdr">
@@ -1100,6 +1135,7 @@ const SB_META={
   'sec-caja':      ['Caja Diaria · ESBA Florida',            'Movimientos y saldos bancarios · 2005–2026 · Live Drive'],
   'sec-financiero':['Financiero 2025 · Resultado anual',     'P&L completo · ENE–DIC 2025 · Año cerrado'],
   'sec-sedes':     ['Red de Sedes · Estado 2026',            'Inscriptos, activos y deuda · Bimestre ABR–MAY 2026'],
+  'sec-central':   ['Sede Central · Olivos',                 'Inscripciones por oferta educativa y vendedor · en vivo'],
   'sec-publicidad':['Marketing y Ventas · Adquisición digital', 'Métricas Meta Ads (7 cuentas ESBA) + histórico Achalay'],
   'sec-simulador': ['Simulador de inscripción',              'Proyección anual por objetivo y CPI']
 };
@@ -1138,7 +1174,7 @@ function sbNav(id, el){
 function goTo(id,btn){sbNav(id,null);}
 
 // Auto-highlight sidebar on scroll
-const sections=['sec-resumen','sec-sedes','sec-fci','sec-pl26','sec-caja','sec-financiero','sec-publicidad','sec-simulador'];
+const sections=['sec-resumen','sec-sedes','sec-fci','sec-pl26','sec-caja','sec-financiero','sec-central','sec-publicidad','sec-simulador'];
 const sbItems=document.querySelectorAll('.sb-item');
 const scroller=document.querySelector('.content-scroll');
 if(scroller){
@@ -2062,6 +2098,98 @@ async function loadSedes26(btn){
   if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualizar Sedes';}
 }
 loadSedes26();
+
+// ════════════ SEDE CENTRAL (OLIVOS) · formulario de inscripciones en vivo ════════════
+// Fuente: formulario, no una planilla pre-armada — A=Marca temporal B=Apellido y
+// nombre C=DNI D=Corresponiente a: (oferta) E=Quien inscribió. Las columnas G en
+// adelante (ene..dic) son un resumen manual pegado en la MISMA hoja, incompleto
+// (confirmado con João 2026-08-06) — nunca leer de ahí, todo se calcula acá desde las
+// filas crudas A-E.
+const SEDE_CENTRAL_SHEET_ID='123CvalKGWNH3TOZmSo5FAyItZvmlhsLIppNb2wyE8dE';
+function parsearFechaFormularioCentral_(s){
+  // "DD/MM/AAAA HH:MM:SS" — parseo explícito de día/mes/año, nunca new Date(string)
+  // directo (mismo criterio que el resto del panel, ambiguo entre formatos).
+  const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec((s||'').trim());
+  if(!m)return null;
+  return{dia:parseInt(m[1],10),mes:parseInt(m[2],10),anio:parseInt(m[3],10)};
+}
+async function loadSedeCentral(btn){
+  const syncLbl=document.getElementById('centralSyncLbl');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">⏳</span> Cargando...';}
+  try{
+    const rows=await fetchSheetCSV(SEDE_CENTRAL_SHEET_ID);
+    const data=rows.slice(1); // fila 0 = header
+    const porOferta={};
+    // Vendedores reales (excluye "Rematriculación", que no es un vendedor — se cuenta
+    // aparte, ver nota debajo de la tabla).
+    const porVendedorMes={}; // {vendedor: {'AAAA-MM': count}}
+    const mesesSet=new Set();
+    let rematriculacion=0,totalInscriptos=0;
+    data.forEach(r=>{
+      const fecha=(r[0]||'').trim(),nombre=(r[1]||'').trim(),oferta=(r[3]||'').trim(),vendedor=(r[4]||'').trim();
+      if(!fecha&&!nombre)return; // fila totalmente vacía
+      totalInscriptos++;
+      if(oferta)porOferta[oferta]=(porOferta[oferta]||0)+1;
+      const f=parsearFechaFormularioCentral_(fecha);
+      const mesKey=f?`${f.anio}-${String(f.mes).padStart(2,'0')}`:null;
+      if(vendedor==='Rematriculación'){
+        rematriculacion++;
+      }else if(vendedor&&mesKey){
+        mesesSet.add(mesKey);
+        porVendedorMes[vendedor]=porVendedorMes[vendedor]||{};
+        porVendedorMes[vendedor][mesKey]=(porVendedorMes[vendedor][mesKey]||0)+1;
+      }
+    });
+    const meses=[...mesesSet].sort();
+    const mesLbl=k=>{const[a,m]=k.split('-');return MES_LABELS[parseInt(m,10)-1]+' '+a;};
+
+    // Tabla por oferta educativa
+    const tOf=document.getElementById('tableCentralOferta');
+    const ofertasOrdenadas=Object.entries(porOferta).sort((a,b)=>b[1]-a[1]);
+    let hOf=`<thead><tr><th>Oferta educativa</th><th class="tr">Inscriptos</th></tr></thead><tbody>`;
+    ofertasOrdenadas.forEach(([nombre,cant])=>{
+      hOf+=`<tr><td class="bold">${nombre}</td><td class="tr num-p">${cant}</td></tr>`;
+    });
+    const totalOferta=ofertasOrdenadas.reduce((s,[,c])=>s+c,0);
+    hOf+=`</tbody><tfoot><tr><td>TOTAL</td><td class="tr">${totalOferta}</td></tr></tfoot>`;
+    tOf.innerHTML=hOf;
+    document.getElementById('centralOfertaNote').textContent=`${totalOferta} inscriptos · ${ofertasOrdenadas.length} ofertas`;
+
+    // Tabla por vendedor × mes (mismo formato pivot que el resumen manual de la
+    // planilla, pero calculado desde las filas crudas — no copiado)
+    const tVe=document.getElementById('tableCentralVendedor');
+    const vendedores=Object.keys(porVendedorMes).sort((a,b)=>{
+      const totA=Object.values(porVendedorMes[a]).reduce((s,v)=>s+v,0);
+      const totB=Object.values(porVendedorMes[b]).reduce((s,v)=>s+v,0);
+      return totB-totA;
+    });
+    let hVe=`<thead><tr><th>Vendedor</th>${meses.map(m=>`<th class="tr">${mesLbl(m)}</th>`).join('')}<th class="tr">Total</th></tr></thead><tbody>`;
+    const totalesPorMes={};meses.forEach(m=>totalesPorMes[m]=0);
+    let totalVendedores=0;
+    vendedores.forEach(v=>{
+      const fila=porVendedorMes[v];
+      let totV=0;
+      const celdas=meses.map(m=>{const c=fila[m]||0;totV+=c;totalesPorMes[m]+=c;return`<td class="tr">${c||'—'}</td>`;}).join('');
+      totalVendedores+=totV;
+      hVe+=`<tr><td class="bold">${v}</td>${celdas}<td class="tr bold">${totV}</td></tr>`;
+    });
+    hVe+=`</tbody><tfoot><tr><td>TOTAL</td>${meses.map(m=>`<td class="tr">${totalesPorMes[m]}</td>`).join('')}<td class="tr">${totalVendedores}</td></tr></tfoot>`;
+    tVe.innerHTML=hVe;
+    document.getElementById('centralVendedorNote').textContent=`${totalVendedores} inscriptos · ${vendedores.length} vendedores`;
+    document.getElementById('centralRematriculacionNote').textContent=rematriculacion?`+ ${rematriculacion} inscripción(es) por Rematriculación — no es un vendedor, no se cuenta en el ranking de arriba.`:'';
+
+    if(meses.length){
+      document.getElementById('centralSecSub').textContent=`Inscripciones por oferta educativa y vendedor · ${mesLbl(meses[0])}–${mesLbl(meses[meses.length-1])}`;
+    }
+    syncLbl.textContent='🟢 Datos en vivo · Google Sheets';syncLbl.classList.add('live');
+  }catch(e){
+    document.getElementById('centralOfertaNote').textContent='Sin conexión';
+    document.getElementById('centralVendedorNote').textContent='Sin conexión';
+    syncLbl.textContent='🔴 Sin conexión';syncLbl.classList.remove('live');
+  }
+  if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualizar Sede Central';}
+}
+loadSedeCentral();
 
 // ════════════ TABLE CURSOS ════════════
 (()=>{
