@@ -2575,16 +2575,24 @@ function refreshSection(section, btn){
 async function refreshAll(btn){
   const orig=btn?btn.innerHTML:null;
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">⏳</span> Actualizando...';}
-  // 1. FCI: actualización directa
-  try{await loadFci();}catch(e){}
+  // Llama directo a los refrescos en vivo de cada sección (fetch real, sin pasar por
+  // Claude) — antes esto delegaba todo a refreshSection('all'), que solo copiaba un
+  // prompt al portapapeles, incluso para secciones que ya tenían fetch en vivo propio
+  // (fix 2026-08-07). Marketing y Ventas queda afuera a propósito: esa sección sigue
+  // siendo actualización manual (ver su propio botón "Actualizar Publicidad"), no
+  // corresponde meterla en un refresco silencioso de "todo".
+  await Promise.allSettled([
+    loadFci(),
+    refreshCaja(),
+    loadPL26(),
+    loadSedes26(),
+    loadResumenEjecutivo(),
+    loadSedeCentral()
+  ]);
   const ahora=new Date();
   const sbUpd=document.getElementById('sbUpdVal');
   if(sbUpd)sbUpd.textContent=ahora.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})+' · '+ahora.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-  // 2. P&L: vía Claude
-  refreshSection('all', null);
-  if(btn){
-    setTimeout(()=>{btn.disabled=false;btn.innerHTML=orig||'🔄 Actualizar todo';},3000);
-  }
+  if(btn){btn.disabled=false;btn.innerHTML=orig||'🔄 Actualizar todo';}
 }
 </script>
 </body>
