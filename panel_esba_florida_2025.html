@@ -186,7 +186,12 @@ body{background:var(--bg);color:var(--text-1);font-family:'IBM Plex Sans',-apple
 .kpi::before{display:none;}
 .kpi.b::before,.kpi.r::before,.kpi.g::before,.kpi.p::before,.kpi.t::before,.kpi.o::before,.kpi.s::before,.kpi.am::before,.kpi.cy::before,.kpi.az::before{display:none;}
 .kpi-lbl{font-size:var(--fs-1);text-transform:uppercase;letter-spacing:.09em;color:var(--text-3);font-weight:500;margin-bottom:10px;}
-.kpi-val{font-size:var(--fs-10);font-weight:700;color:var(--text-1);line-height:1;letter-spacing:-.04em;}
+/* overflow-wrap:break-word — a 1440px, 4 cards por fila (.kpi-grid-4) dejan menos ancho
+   por card que a 1920px; con font-size fijo (--fs-10, 36px) un valor largo como
+   "$-45.2M" se salía del borde del card en vez de ajustarse (bug real, ver
+   .mes-blocks-grid arriba). El card ya tiene alto flexible, así que si hace falta
+   pasar a 2 líneas no rompe nada. */
+.kpi-val{font-size:var(--fs-10);font-weight:700;color:var(--text-1);line-height:1;letter-spacing:-.04em;overflow-wrap:break-word;}
 .kpi-val.pos{color:var(--pos);}.kpi-val.neg{color:var(--neg);}.kpi-val.ora{color:var(--acc-amber);}.kpi-val.sky{color:var(--info);}.kpi-val.amb{color:var(--acc-amber);}.kpi-val.pu{color:var(--acc-purple);}
 .kpi-sub{font-size:var(--fs-1);color:var(--text-3);margin-top:6px;line-height:1.4;}
 /* Mismo lenguaje visual que .trend-pill de la banda hero (pill con tinte de color), no
