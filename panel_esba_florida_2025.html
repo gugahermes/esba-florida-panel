@@ -2039,12 +2039,18 @@ new Chart(document.getElementById('chartOlivos'),{type:'bar',data:{labels:D.bach
 // ════════════ SEDES 2026 · CHARTS + TABLA (live desde "Resumen Sedes 2026") ════════════
 let chartBimNuevos=null,chartBimActivos=null;
 function renderSedesSection(sedes,y2025){
-  const BIM_LABELS=['DIC-ENE','FEB-MAR','ABR-MAY','JUN-JUL*'];
+  // Bimestre real "en curso" por fecha (calendario global, offset 0) — reemplaza el
+  // indice 3 (JUN-JUL) que quedaba pineado a mano desde el 2026-07-31 y ya no
+  // rotaba solo. Se marca con "*" el bimestre actual, no siempre el mismo.
+  const{idx:bimActualIdx}=bimestreActualPorFecha_(0);
+  const BIM_LABELS_BASE=['DIC-ENE','FEB-MAR','ABR-MAY','JUN-JUL','AGO-SET','OCT-NOV'];
+  const BIM_LABELS=BIM_LABELS_BASE.map((l,i)=>i===bimActualIdx?l+'*':l);
+  const claves=['b1','b2','b3','b4','b5','b6'];
   const sum=k=>sedes.reduce((s,x)=>s+(x[k]||0),0);
-  const n2026=[sum('b1n'),sum('b2n'),sum('b3n'),sum('b4n')];
-  const a2026=[sum('b1a'),sum('b2a'),sum('b3a'),sum('b4a')];
-  const n2025=y2025?[y2025.b1n,y2025.b2n,y2025.b3n,y2025.b4n]:[null,null,null,null];
-  const a2025=y2025?[y2025.b1a,y2025.b2a,y2025.b3a,y2025.b4a]:[null,null,null,null];
+  const n2026=claves.map(c=>sum(c+'n'));
+  const a2026=claves.map(c=>sum(c+'a'));
+  const n2025=claves.map(c=>y2025?y2025[c+'n']:null);
+  const a2025=claves.map(c=>y2025?y2025[c+'a']:null);
 
   if(chartBimNuevos)chartBimNuevos.destroy();
   if(chartBimActivos)chartBimActivos.destroy();
@@ -2076,19 +2082,27 @@ function renderSedesSection(sedes,y2025){
     extremesEl.innerHTML=peores.length?peores.map(mini).join(''):'<div style="font-size:0.72rem;color:var(--text-3);">Ninguna sede con caída de activos entre FEB-MAR y ABR-MAY.</div>';
   }
 
-  let h=`<thead><tr><th rowspan="2">Sede</th><th class="tc grp" colspan="2">DIC-ENE</th><th class="tc grp" colspan="2">FEB-MAR</th><th class="tc grp" colspan="2">ABR-MAY</th><th class="tc grp" colspan="2">JUN-JUL*</th><th class="tr" rowspan="2">Total cerrado</th></tr><tr><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th></tr></thead><tbody>`;
-  const sorted=[...sedes].sort((a,b)=>((b.b1n||0)+(b.b2n||0)+(b.b3n||0)+(b.b4n||0))-((a.b1n||0)+(a.b2n||0)+(a.b3n||0)+(a.b4n||0)));
-  let t1n=0,t1a=0,t2n=0,t2a=0,t3n=0,t3a=0,t4n=0,t4a=0;
+  let h='<thead><tr><th rowspan="2">Sede</th>'+BIM_LABELS.map(l=>`<th class="tc grp" colspan="2">${l}</th>`).join('')+'<th class="tr" rowspan="2">Total cerrado</th></tr><tr>'+BIM_LABELS.map(()=>'<th class="tc grp">N</th><th class="tc grp">A</th>').join('')+'</tr></thead><tbody>';
+  const cerrados=claves.slice(0,bimActualIdx); // bimestres antes del actual = cerrados
+  const sumaCerrados=s=>cerrados.reduce((acc,c)=>acc+(s[c+'n']||0),0);
+  const sorted=[...sedes].sort((a,b)=>sumaCerrados(b)-sumaCerrados(a));
+  const totales=claves.map(()=>({n:0,a:0}));
   sorted.forEach(s=>{
-    const tot=(s.b1n||0)+(s.b2n||0)+(s.b3n||0);
-    t1n+=s.b1n||0;t1a+=s.b1a||0;t2n+=s.b2n||0;t2a+=s.b2a||0;t3n+=s.b3n||0;t3a+=s.b3a||0;t4n+=s.b4n||0;t4a+=s.b4a||0;
-    h+=`<tr><td class="bold">${s.n}</td><td class="tc num-s">${dash(s.b1n)}</td><td class="tc">${dash(s.b1a)}</td><td class="tc num-s">${dash(s.b2n)}</td><td class="tc">${dash(s.b2a)}</td><td class="tc num-s">${dash(s.b3n)}</td><td class="tc">${dash(s.b3a)}</td><td class="tc num-s">${dash(s.b4n)}</td><td class="tc">${dash(s.b4a)}</td><td class="tr bold">${tot}</td></tr>`;
+    const tot=sumaCerrados(s);
+    let row=`<tr><td class="bold">${s.n}</td>`;
+    claves.forEach((c,i)=>{
+      totales[i].n+=s[c+'n']||0;totales[i].a+=s[c+'a']||0;
+      row+=`<td class="tc num-s">${dash(s[c+'n'])}</td><td class="tc">${dash(s[c+'a'])}</td>`;
+    });
+    row+=`<td class="tr bold">${tot}</td></tr>`;
+    h+=row;
   });
-  h+=`</tbody><tfoot><tr><td>TOTAL 2026</td><td class="tc num-s bold">${t1n}</td><td class="tc bold">${t1a}</td><td class="tc num-s bold">${t2n}</td><td class="tc bold">${t2a}</td><td class="tc num-s bold">${t3n}</td><td class="tc bold">${t3a}</td><td class="tc num-s bold">${t4n||'—'}</td><td class="tc bold">${t4a||'—'}</td><td class="tr bold">${t1n+t2n+t3n}</td></tr></tfoot>`;
+  const totalCerradosN=cerrados.reduce((acc,c,i)=>acc+totales[i].n,0);
+  h+='<tfoot><tr><td>TOTAL 2026</td>'+totales.map(t=>`<td class="tc num-s bold">${t.n||'—'}</td><td class="tc bold">${t.a||'—'}</td>`).join('')+`<td class="tr bold">${totalCerradosN}</td></tr></tfoot>`;
   t.innerHTML=h;
 
-  const nuevosCerrados=n2026[0]+n2026[1]+n2026[2];
-  const nuevos2025Cerrados=(n2025[0]||0)+(n2025[1]||0)+(n2025[2]||0);
+  const nuevosCerrados=cerrados.reduce((acc,c,i)=>acc+n2026[i],0);
+  const nuevos2025Cerrados=cerrados.reduce((acc,c,i)=>acc+(n2025[i]||0),0);
   document.getElementById('sedesInsNuevos').textContent=nuevosCerrados.toLocaleString('es-AR');
   document.getElementById('kpiInscriptos').textContent=nuevosCerrados.toLocaleString('es-AR');
   if(nuevos2025Cerrados){
@@ -2099,21 +2113,18 @@ function renderSedesSection(sedes,y2025){
     document.getElementById('kpiInscriptos').className='kpi-val '+(diffN>=0?'pos':'neg');
   }
 
-  // JUN-JUL (índice 3, último bimestre EN CURSO, no el último cerrado) — decisión
-  // 2026-07-31: mostrar el número más actual aunque sea parcial, con aclaración
-  // visible en la propia tarjeta (ver #kpiActivosParcial) para que no se confunda
-  // con una cifra de cierre. Antes usaba índice 2 (ABR-MAY, último cerrado).
-  const activosUltimo=a2026[3],activos2025Mismo=a2025[3];
-  document.getElementById('sedesInsActivos').textContent=activosUltimo.toLocaleString('es-AR');
-  document.getElementById('kpiActivos').textContent=activosUltimo.toLocaleString('es-AR');
-  document.getElementById('kpiActivosLbl').textContent='Alumnos activos · JUN-JUL 2026';
-  if(activos2025Mismo){
-    const diffA=activosUltimo-activos2025Mismo,pctA=Math.round(diffA/activos2025Mismo*100);
-    const elA=document.getElementById('kpiActivosDiff');
-    elA.innerHTML=(diffA>=0?'▲ +':'▼ −')+Math.abs(diffA).toLocaleString('es-AR')+' vs 2025 ('+(pctA>=0?'+':'')+pctA+'%)';
-    elA.className='kpi-diff '+(diffA>=0?'pos':'neg');
-    document.getElementById('kpiActivos').className='kpi-val '+(diffA>=0?'pos':'neg');
-    document.getElementById('kpiActivosSub').textContent='Vs '+activos2025Mismo.toLocaleString('es-AR')+' en JUN-JUL 2025';
+  // El KPI "Alumnos activos" ya NO se fija acá — lo calcula calcularActivosLiveTotal_()
+  // en loadSedes26(), leyendo en vivo directo de las planillas de subsede (ver
+  // diagnostico 2026-08-24/25: este numero de Resumen Sedes depende de consolidacion
+  // manual y llega desactualizado). Se deja un valor interino con el ultimo bimestre
+  // cerrado de esta misma planilla para que el card no quede vacio mientras esa
+  // lectura en vivo (14 sedes x 4 solapas) termina de resolver.
+  const idxInterino=Math.max(0,bimActualIdx-1);
+  const interino=a2026[idxInterino];
+  if(interino){
+    document.getElementById('sedesInsActivos').textContent=interino.toLocaleString('es-AR');
+    document.getElementById('kpiActivos').textContent=interino.toLocaleString('es-AR');
+    document.getElementById('kpiActivosLbl').textContent='Alumnos activos · '+BIM_LABELS_BASE[idxInterino]+' (cargando en vivo…)';
   }
   document.getElementById('kpiCantSedes').textContent=sedes.length;
 }
@@ -2122,21 +2133,163 @@ async function fetchSedes26Data(){
   const rows=await fetchSheetCSV('1OGt8aL8jtRNwkBIBVqg1vRU93wdqPYmfWMduH7DgVio');
   const num=v=>{const n=parseInt((v||'').replace(/[^\d-]/g,''),10);return isNaN(n)?null:n;};
   const sedes=[];let y2025=null;
+  // Lee tambien b5/b6 (AGO-SET, OCT-NOV) — antes el parser cortaba en r[9] (JUN-JUL) y
+  // dejaba afuera las columnas 10-13 de la planilla, que ya existen aunque vengan
+  // parcialmente cargadas por sede (ver diagnostico 2026-08-24).
   for(const r of rows){
     const rank=(r[0]||'').trim(),name=(r[1]||'').trim();
     if(!name)continue;
-    if(/^2025$/.test(name)){y2025={b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9])};continue;}
+    if(/^2025$/.test(name)){y2025={b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9]),b5n:num(r[10]),b5a:num(r[11]),b6n:num(r[12]),b6a:num(r[13])};continue;}
     if(!/^\d+$/.test(rank))continue;
-    sedes.push({n:name,b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9])});
+    sedes.push({n:name,b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9]),b5n:num(r[10]),b5a:num(r[11]),b6n:num(r[12]),b6a:num(r[13])});
   }
   if(sedes.length<5)throw new Error('parse failed');
   return{sedes,y2025:y2025||FALLBACK_SEDES_Y2025};
 }
+
+// ════════════ ALUMNOS ACTIVOS · LECTURA EN VIVO POR SUBSEDE ════════════
+// Diagnostico 2026-08-24/25: "Resumen Sedes 2026" depende de que Daniel consolide a
+// mano cada bimestre (y de solapas "Liquidacion" con la misma dependencia de una
+// celda "Bim. Actual" por modalidad que nadie rota a tiempo) — mismo problema en un
+// lugar distinto, no una fuente mas confiable. En cambio, cada subsede tiene su
+// propia planilla individual (carpeta de Drive compartida por Guga) con 4 solapas
+// por modalidad (Cursada=plan 6794, INTENSIVO, INTENSIVO ANUAL, REGULAR), cada una
+// con: DNI en columna D (indice 3), columna STATUS, y — arrancando siempre 5
+// columnas despues de STATUS — un bloque de 12 columnas de pago mensual (una por
+// mes calendario). El criterio de "activo" es pago del mes/bimestre correspondiente
+// tildado (texto "Verdadero") o con un monto en pesos > 0 en esa misma celda (en
+// sedes donde cobra la sede misma es un tilde; en sedes donde cobra la central —
+// confirmado en Pilar, y el mismo patron en Mar del Plata — es un monto). No se usa
+// STATUS=RA/RI como criterio: San Isidro tiene alumnos con STATUS=RI pagando al dia
+// (38.5% de sus RI con jul/ago tildado), asi que RI no es sinonimo de inactivo.
+const TABS_MODALIDAD_=['Cursada','INTENSIVO','INTENSIVO ANUAL','REGULAR'];
+const SEDES_INDIVIDUALES_=[
+  // offset: cuantos meses despues del calendario global (Dic=inicio B1) arranca el
+  // bimestre de esta sede. Mar del Plata factura corrido +1 mes (Ene-Feb:B1... en
+  // vez de Dic-Ene:B1...) — confirmado por Guga y por la propia leyenda de su planilla.
+  {n:'Escobar',id:'1kaq2ehjfJmy_BwoUImRDzRD8dlW8uSVbdBc6vlk1CRg',offset:0},
+  {n:'Virtual',id:'162kxYxq4NgzcXheVdQQvqxxrGTLBWTgTLihtj6Y4r-I',offset:0},
+  {n:'Mar del Plata',id:'1SKmQujocWfaodcS9nssLyc6LYenBdH-nFp8qzCzgbmk',offset:1},
+  {n:'San Miguel',id:'1B2XF7mBBqE-FGnhleNuWjrm9Ie3XXZ5VjZHPMnvhZTs',offset:0},
+  {n:'Barrio Norte',id:'1H_AADH8HMd6sJn2cMAkLF9ouVDfA-gJBHR5TxjOJDvk',offset:0},
+  {n:'San isidro',id:'1sjKQKMUVIRhvTrkiyIC7zN0stpFH1eASGt5gTHzyWxw',offset:0},
+  {n:'Concepción',id:'1-jRuwy_FYz4myPZtj6ATth-hZ7CXte9s9N2VwK-xdg4',offset:0},
+  // Lanus tiene 2 planillas en Drive (Subsede_Lanus_26 y _Nueva) con numeros muy
+  // distintos (43 vs 2 activos) — se usa la vieja porque coincide con el historico
+  // de Resumen Sedes; hay que confirmar con la sede cual es la vigente.
+  {n:'Lanus',id:'1hWVG6DUramhreDHOsTOGv7y4wU3Cv8XHzOG7vccuLms',offset:0},
+  {n:'Pilar',id:'13prrS31hFzY1IdMJ1TK0rRRAA9gZ-c3HHKmBOdhgoQ0',offset:0},
+  {n:'Rosario',id:'1CvIuN-yAAJqJrCjFZrG-vdfOryn6iFUaesN28hrWqNk',offset:0},
+  {n:'Paraná',id:'18XSgAZaiEhJjkfMWooxlth095vHMAr9dGtlXSxg0934',offset:0},
+  {n:'Santa Fe',id:'1mQWfUuPk6jGTbI7X6VUW463EkJRk6B7CHShzAEUjdKY',offset:0},
+  // Los CADs chicos solo tienen la solapa Cursada (plan 6794) — sin INTENSIVO/
+  // INTENSIVO ANUAL/REGULAR. fetchTabAlumnosPago_ se salta las que no existen.
+  {n:'Potenciar',id:'1nJp3aKVND_C17aKtDjqLyq-s2yZmuTFSuP2KTbXPits',offset:0},
+  {n:'CAD Morón',id:'1nhglDaDP54NyzNBc_f-2eYNcM-px1Vci2-H9GtEiwUI',offset:0},
+];
+// Sedes de Resumen Sedes sin planilla individual propia en la carpeta de Drive —
+// sus numeros vienen identicos en los 6 bimestres (ver CSV real), asi que son
+// cuentas fijas de tipo institucional, no un padron que cambie: se listan aparte
+// para sumarlas tal cual al total en vez de tratarlas como "en vivo".
+const SEDES_SIN_PLANILLA_PROPIA_=['CADs','aysa','Terminal Zarate','Buco'];
+
+function bimestreActualPorFecha_(offsetMeses){
+  const hoy=new Date();
+  const mesReal=hoy.getMonth(); // 0=Ene..11=Dic
+  const mesEfectivo=(mesReal-offsetMeses+12)%12;
+  const idx=Math.floor(((mesEfectivo+1)%12)/2); // 0=DIC-ENE .. 5=OCT-NOV
+  const mesInicioBloque=(11+offsetMeses)%12; // primer mes del bloque de 12 columnas (11=Dic si offset 0)
+  const posEnBloque=(mesReal-mesInicioBloque+12)%12; // 0..11, posicion del mes real dentro del bloque de esa sede
+  const parIdx=Math.floor(posEnBloque/2);
+  return{idx,columnasBimestre:[parIdx*2,parIdx*2+1]};
+}
+
+async function fetchSheetCSVPorNombre_(sheetId,nombreSolapa){
+  const url=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nombreSolapa)}`;
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('No se pudo leer la solapa ('+res.status+')');
+  const text=await res.text();
+  return text.trim().split('\n').map(line=>line.slice(1,-1).split('","'));
+}
+function parseMontoOTilde_(s){
+  s=(s||'').trim();
+  if(!s)return null;
+  if(s==='Verdadero')return true;
+  const n=parseFloat(s.replace(/\./g,'').replace(',','.'));
+  return isNaN(n)?null:n;
+}
+// Ubica STATUS por nombre de columna en la fila de encabezado (indice 2). El bloque
+// de pago mensual (12 columnas) arranca siempre 5 columnas despues de STATUS — vale
+// para sedes con etiquetas D-E-F-M-A-M-J-J-A-S-O-N (la mayoria) y para las que usan
+// nombres tipo ENEMDP/FEBMDP (Mar del Plata) o no tienen etiqueta de texto en esa
+// fila (Pilar): la posicion relativa a STATUS es estable en las 15 sedes/CADs
+// verificadas, el nombre de columna no lo es.
+async function fetchTabAlumnosPago_(sheetId,nombreSolapa,columnasBimestre){
+  let rows;
+  try{rows=await fetchSheetCSVPorNombre_(sheetId,nombreSolapa);}catch(e){return null;}
+  if(!rows||rows.length<4)return null;
+  const header=rows[2]||[];
+  const statusCol=header.findIndex(c=>(c||'').trim()==='STATUS');
+  if(statusCol<0)return null; // la solapa no existe para esta sede (gviz cae a otra por fallback silencioso)
+  const pagoStart=statusCol+5;
+  const alumnos=[];
+  for(let i=3;i<rows.length;i++){
+    const r=rows[i];
+    if(!r||r.length<=3)continue;
+    const dni=(r[3]||'').trim().replace(/[.\s]/g,'');
+    if(!/^\d+$/.test(dni))continue;
+    let pago=false;
+    for(const col of columnasBimestre){
+      const v=parseMontoOTilde_(r[pagoStart+col]);
+      if(v===true||(typeof v==='number'&&v>0)){pago=true;break;}
+    }
+    alumnos.push({dni,pago});
+  }
+  return alumnos;
+}
+async function calcularActivosSedeIndividual_(sede){
+  const{columnasBimestre}=bimestreActualPorFecha_(sede.offset);
+  const resultados=await Promise.all(TABS_MODALIDAD_.map(t=>fetchTabAlumnosPago_(sede.id,t,columnasBimestre)));
+  const porDni=new Map();
+  let algunaSolapaValida=false;
+  resultados.forEach(alumnos=>{
+    if(!alumnos)return;
+    algunaSolapaValida=true;
+    alumnos.forEach(a=>{
+      if(!porDni.has(a.dni))porDni.set(a.dni,false);
+      if(a.pago)porDni.set(a.dni,true);
+    });
+  });
+  if(!algunaSolapaValida)return null;
+  let activos=0;
+  porDni.forEach(pago=>{if(pago)activos++;});
+  return{activos,matriculados:porDni.size};
+}
+async function calcularActivosLiveTotal_(sedesResumen){
+  const resultados=await Promise.all(SEDES_INDIVIDUALES_.map(s=>calcularActivosSedeIndividual_(s).catch(()=>null)));
+  const porSede={};let total=0;const sedesSinDatos=[];
+  SEDES_INDIVIDUALES_.forEach((s,i)=>{
+    const r=resultados[i];
+    if(r){porSede[s.n]=r.activos;total+=r.activos;}
+    else sedesSinDatos.push(s.n);
+  });
+  // Las sedes sin planilla propia (institucionales, numero fijo) suman su ultimo
+  // valor conocido de Resumen Sedes tal cual — no hay forma de leerlas en vivo.
+  const nombresLive=new Set(SEDES_INDIVIDUALES_.map(s=>s.n));
+  (sedesResumen||[]).forEach(s=>{
+    if(!nombresLive.has(s.n)&&SEDES_SIN_PLANILLA_PROPIA_.includes(s.n)&&s.b5a!=null){
+      porSede[s.n]=s.b5a;total+=s.b5a;
+    }
+  });
+  return{total,porSede,sedesSinDatos};
+}
+
 async function loadSedes26(btn){
   const syncLbl=document.getElementById('sedesSyncLbl');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">⏳</span> Cargando...';}
+  let sedes=null,y2025=null;
   try{
-    const{sedes,y2025}=await fetchSedes26Data();
+    ({sedes,y2025}=await fetchSedes26Data());
     renderSedesSection(sedes,y2025);
     syncLbl.textContent='🟢 Datos en vivo · Google Sheets';syncLbl.classList.add('live');
   }catch(e){
@@ -2144,6 +2297,26 @@ async function loadSedes26(btn){
     syncLbl.textContent='📋 Datos al 30/6/2026 (sin conexión)';syncLbl.classList.remove('live');
   }
   if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualizar Sedes';}
+  // Alumnos activos: se recalcula aparte, en vivo, directo desde las planillas
+  // individuales de subsede (ver comentario arriba) — reemplaza el numero que
+  // veniamos mostrando desde "Resumen Sedes 2026", que depende de consolidacion
+  // manual. Corre despues del render de arriba para no bloquear la carga del resto
+  // de la seccion mientras lee ~14 sedes x 4 solapas.
+  try{
+    const{total,sedesSinDatos}=await calcularActivosLiveTotal_(sedes);
+    document.getElementById('kpiActivos').textContent=total.toLocaleString('es-AR');
+    document.getElementById('sedesInsActivos').textContent=total.toLocaleString('es-AR');
+    document.getElementById('kpiActivosLbl').textContent='Alumnos activos · pagaron el bimestre';
+    const parcialEl=document.getElementById('kpiActivosParcial');
+    parcialEl.textContent=sedesSinDatos.length
+      ?`🟢 En vivo desde planillas de subsede · sin datos: ${sedesSinDatos.join(', ')}`
+      :'🟢 En vivo desde planillas de subsede (14 sedes/CADs + 4 fijas)';
+    document.getElementById('kpiActivosDiff').style.display='none';
+    document.getElementById('kpiActivosSub').textContent='Pagó el mes o bimestre en curso · no depende de consolidación manual';
+  }catch(e){
+    // Si falla la lectura en vivo, se deja el numero de Resumen Sedes que ya
+    // renderizo renderSedesSection() arriba — nunca queda la seccion en blanco.
+  }
 }
 loadSedes26();
 
