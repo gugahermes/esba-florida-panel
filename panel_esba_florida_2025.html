@@ -1539,25 +1539,20 @@ async function loadResumenEjecutivo(btn){
   window.__runway.liquidezTotal=liquidezTotal;
   window.__runway.base=`FCI ${fm(fciSaldo)} + Caja ${fm(cajaSaldo)}`;
   renderLiquidezSub();
-  let activosUltimo=null;
   try{
-    const{sedes,y2025}=await fetchSedes26Data();
-    // JUN-JUL (b4a, en curso) — antes usaba b3a (ABR-MAY, último cerrado), que
-    // quedó desalineado con la tarjeta "Alumnos activos" de Red de Sedes al
-    // cambiar esa a mostrar el bimestre en curso (2026-07-31). Mismo número en
-    // las dos secciones ahora, en vez de dos cifras distintas para "activos".
-    activosUltimo=sedes.reduce((s,x)=>s+(x.b4a||0),0);
-    const activos2025Mismo=y2025?y2025.b4a:null;
+    // Misma fuente que la tarjeta "Alumnos activos" de Red de Sedes —
+    // calcularActivosGlobal_() la cachea, así que si esa sección ya la pidió (o la
+    // pide después) no se vuelve a leer todo de nuevo. Antes esta tarjeta calculaba
+    // su propio número (b4a de Resumen Sedes) por separado y podía mostrar una
+    // cifra distinta a la de Red de Sedes en la misma pantalla — encontrado y
+    // corregido 2026-08-25.
+    const{total,sedesSinDatos}=await calcularActivosGlobal_();
     const valEl=document.getElementById('resActivosTotales'),subEl=document.getElementById('resActivosTotalesSub');
-    valEl.textContent=activosUltimo.toLocaleString('es-AR');
-    if(activos2025Mismo){
-      const diffA=activosUltimo-activos2025Mismo,pctA=Math.round(diffA/activos2025Mismo*100);
-      valEl.className='kpi-val-xl '+(diffA>=0?'pos':'neg');
-      subEl.innerHTML=`Bimestre en curso, parcial · <span class="trend-pill ${diffA>=0?'pos':'neg'}"><span class="trend-dot"></span>${diffA>=0?'▲ +':'▼ −'}${Math.abs(diffA).toLocaleString('es-AR')} vs 2025 (${pctA>=0?'+':''}${pctA}%)</span>`;
-    }else{
-      valEl.className='kpi-val-xl';
-      subEl.textContent='Bimestre en curso, parcial';
-    }
+    valEl.textContent=total.toLocaleString('es-AR');
+    valEl.className='kpi-val-xl';
+    subEl.textContent=sedesSinDatos.length
+      ?`Pagó el bimestre en curso · en vivo (sin datos: ${sedesSinDatos.join(', ')})`
+      :'Pagó el bimestre en curso · en vivo, no depende de consolidación manual';
     liveCount++;
   }catch(e){
     document.getElementById('resActivosTotales').textContent='—';
@@ -2284,6 +2279,24 @@ async function calcularActivosLiveTotal_(sedesResumen){
   });
   return{total,porSede,sedesSinDatos};
 }
+// Fuente única para "alumnos activos" en TODO el panel — antes "Resumen Ejecutivo"
+// (resActivosTotales) calculaba su propio número por separado, hardcodeado a
+// b4a/JUN-JUL de Resumen Sedes 2026, mientras "Red de Sedes" ya mostraba el nuevo
+// número en vivo: dos cifras distintas en la misma pantalla (encontrado y
+// corregido 2026-08-25). Cachea la promesa para que, sin importar cuántas
+// secciones la pidan, las ~14 sedes x 4 solapas se lean una sola vez.
+let activosGlobalPromise_=null;
+function calcularActivosGlobal_(){
+  if(!activosGlobalPromise_){
+    activosGlobalPromise_=(async()=>{
+      let sedesResumen=null;
+      try{sedesResumen=(await fetchSedes26Data()).sedes;}catch(e){}
+      return calcularActivosLiveTotal_(sedesResumen);
+    })();
+    activosGlobalPromise_.catch(()=>{activosGlobalPromise_=null;}); // permite reintentar si falla
+  }
+  return activosGlobalPromise_;
+}
 
 async function loadSedes26(btn){
   const syncLbl=document.getElementById('sedesSyncLbl');
@@ -2304,7 +2317,7 @@ async function loadSedes26(btn){
   // manual. Corre despues del render de arriba para no bloquear la carga del resto
   // de la seccion mientras lee ~14 sedes x 4 solapas.
   try{
-    const{total,sedesSinDatos}=await calcularActivosLiveTotal_(sedes);
+    const{total,sedesSinDatos}=await calcularActivosGlobal_();
     document.getElementById('kpiActivos').textContent=total.toLocaleString('es-AR');
     document.getElementById('sedesInsActivos').textContent=total.toLocaleString('es-AR');
     document.getElementById('kpiActivosLbl').textContent='Alumnos activos · pagaron el bimestre';
