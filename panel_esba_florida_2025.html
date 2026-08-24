@@ -821,6 +821,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
       <button class="mo-tab" onclick="selectMonth('05','1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8','MAY 2026')">MAY</button>
       <button class="mo-tab" onclick="selectMonth('06','10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I','JUN 2026')">JUN</button>
       <button class="mo-tab active" onclick="selectMonth('07','13Vv10pwm_586veWBAX2ezPPA0xGyQ6IdZl2jMbrhjL8','JUL 2026')">JUL ◀ último cerrado</button>
+      <button class="mo-tab" onclick="selectMonth('08','1hohlu0wsF03GaIsYptY5cXX2m0L9hPy3fmxxq6OL9Ws','AGO 2026')">AGO</button>
     </div>
   </div>
 
@@ -1330,7 +1331,8 @@ const MESES_CAJA_BOOTSTRAP=[
   {m:'ABR',anio:2026,id:'1MfeZV6_3rof1xzx6KJZoKzA96a8pLOVySvmK1sHKoUk'},
   {m:'MAY',anio:2026,id:'1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8'},
   {m:'JUN',anio:2026,id:'10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I'},
-  {m:'JUL',anio:2026,id:'13Vv10pwm_586veWBAX2ezPPA0xGyQ6IdZl2jMbrhjL8'}
+  {m:'JUL',anio:2026,id:'13Vv10pwm_586veWBAX2ezPPA0xGyQ6IdZl2jMbrhjL8'},
+  {m:'AGO',anio:2026,id:'1hohlu0wsF03GaIsYptY5cXX2m0L9hPy3fmxxq6OL9Ws'}
 ];
 let _mesesCajaCache=null;
 async function resolverMesesCaja(){
@@ -1637,6 +1639,39 @@ function selectYear(yr){
 // traspasos internos (ver esTraspasoInterno) — nunca la celda "Entradas Reales" de la
 // planilla (no excluía el rescate del FCI) ni "Salidas reales" tal cual (solo excluía
 // "A Inversión", no los traspasos "De X a Y").
+// Sprint Caja Agosto (2026-08-24) — solapa "VERIFICACIÓN" que la persona de
+// administración carga todos los meses para corroborar saldos bancarios (confirmado
+// por Guga) — mismo gid 70561875 verificado en julio y agosto 2026, los 2 meses
+// inspeccionados directamente; no se revisaron meses anteriores. Contiene el desglose
+// real de Caja Recepción/Administración + cuentas bancarias + wallet de MP.
+// Cierra un gap documentado desde 2026-08-06: santander/bbva8/efectivo venían siempre
+// en null porque no existía ninguna fuente para esos 3 datos — acá sí.
+// Defensivo a propósito: si algún mes no tiene esta solapa (ej. meses viejos, antes de
+// que administración empezara a cargarla) o el fetch/parseo falla por lo que sea, cae
+// a los 3 en null — exactamente el mismo comportamiento que había antes de este cambio,
+// nunca rompe el resto del dashboard.
+const GID_VERIFICACION_CAJA=70561875;
+async function fetchVerificacionCaja(sheetId){
+  try{
+    const rows=await fetchSheetCSV(sheetId,GID_VERIFICACION_CAJA);
+    const pv=parseARSCell;
+    let cajaRecepcion=null,cajaAdministracion=null,santander=null,bbva8=null,banco=null;
+    for(const r of rows){
+      const c0=(r[0]||'').trim();
+      if(/^Caja Recepci[oó]n/i.test(c0)){cajaRecepcion=pv(r[1]);continue;}
+      if(/^Caja Administraci[oó]n/i.test(c0)){cajaAdministracion=pv(r[1]);continue;}
+      if(/^Banco Santanderrio/i.test(c0)){banco='santander';continue;}
+      if(/^Banco BBVA/i.test(c0)){banco='bbva';continue;}
+      if(/^Mercado Pago/i.test(c0)){banco=null;continue;}
+      if(banco==='santander'&&/^Cuenta Corriente$/i.test(c0)){santander=pv(r[1]);continue;}
+      if(banco==='bbva'&&/^Cuenta Corriente \/8$/i.test(c0)){bbva8=pv(r[1]);continue;}
+    }
+    const efectivo=(cajaRecepcion!==null||cajaAdministracion!==null)?(cajaRecepcion||0)+(cajaAdministracion||0):null;
+    return{santander,bbva8,efectivo};
+  }catch(e){
+    return{santander:null,bbva8:null,efectivo:null};
+  }
+}
 function parseCajaCSV(rows){
   const pv=parseARSCell;
   const movs=[];
@@ -1688,8 +1723,9 @@ async function selectMonth(mo,fileId,label){
   const content=document.getElementById('cajaContent');
   content.innerHTML='<div class="caja-loading">⏳ Cargando '+label+'...</div>';
   try{
-    const rows=await fetchSheetCSV(fileId);
+    const[rows,verif]=await Promise.all([fetchSheetCSV(fileId),fetchVerificacionCaja(fileId)]);
     const d=parseCajaCSV(rows);
+    d.santander=verif.santander;d.bbva8=verif.bbva8;d.efectivo=verif.efectivo;
     renderCaja(d,label,fileId);
   }catch(e){
     content.innerHTML=`<div class="caja-yr-panel"><h3>⚠️ No se pudo cargar ${label}</h3><p>${e.message||'Revisá que la planilla esté compartida como "Cualquiera con el enlace".'}</p><a class="drive-link" href="https://docs.google.com/spreadsheets/d/${fileId}" target="_blank">📊 Abrir ${label} en Drive</a></div>`;
@@ -1805,8 +1841,9 @@ async function loadMesCajaDashboard(tipo){
     return;
   }
   try{
-    const rows=await fetchSheetCSV(info.id,info.gid);
+    const[rows,verif]=await Promise.all([fetchSheetCSV(info.id,info.gid),fetchVerificacionCaja(info.id)]);
     const p=parseCajaCSV(rows);
+    p.santander=verif.santander;p.bbva8=verif.bbva8;p.efectivo=verif.efectivo;
     const cats=categorizarParaDashboard(p.movs);
     // Entradas/Salidas Reales ancladas a la celda TOTAL de la planilla — ver
     // parseCajaCSV. cats acá solo aporta el desglose por categoría para los gráficos.
