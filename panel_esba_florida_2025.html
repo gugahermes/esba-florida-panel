@@ -600,7 +600,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   <div class="sec-top-icon">🏫</div>
   <div class="sec-top-text">
     <div class="sec-top-title">Red de Sedes · Estado 2026</div>
-    <div class="sec-top-sub">Inscriptos y activos por bimestre · JUN-JUL en curso</div>
+    <div class="sec-top-sub" id="sedesSecSub">Inscriptos y activos por bimestre · JUN-JUL en curso</div>
   </div>
   <div class="sec-top-right">
     <span class="fci-sync" id="sedesSyncLbl">⏳ Cargando...</span>
@@ -2127,6 +2127,7 @@ function renderSedesSection(sedes,y2025){
     document.getElementById('kpiActivosLbl').textContent='Alumnos activos · '+BIM_LABELS_BASE[idxInterino]+' (cargando en vivo…)';
   }
   document.getElementById('kpiCantSedes').textContent=sedes.length;
+  document.getElementById('sedesSecSub').textContent='Inscriptos y activos por bimestre · '+BIM_LABELS_BASE[bimActualIdx]+' en curso';
 }
 
 async function fetchSedes26Data(){
