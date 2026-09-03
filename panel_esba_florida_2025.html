@@ -600,7 +600,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
   <div class="sec-top-icon">🏫</div>
   <div class="sec-top-text">
     <div class="sec-top-title">Red de Sedes · Estado 2026</div>
-    <div class="sec-top-sub">Inscriptos y activos por bimestre · JUN-JUL en curso</div>
+    <div class="sec-top-sub">Inscriptos y activos por bimestre · AGO-SET en curso</div>
   </div>
   <div class="sec-top-right">
     <span class="fci-sync" id="sedesSyncLbl">⏳ Cargando...</span>
@@ -614,7 +614,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
 </div>
 <div class="kpi-grid-4" style="margin-bottom:12px;">
   <div class="kpi s"><div class="kpi-lbl">Inscriptos nuevos 2026</div><div class="kpi-val neg" id="kpiInscriptos">409</div><div class="kpi-diff neg" id="kpiInscriptosDiff">▼ −140 vs 2025 (−25%)</div><div class="kpi-sub" id="kpiInscriptosSub">3 bimestres cerrados</div></div>
-  <div class="kpi b"><div class="kpi-lbl" id="kpiActivosLbl">Alumnos activos último bimestre</div><div class="kpi-val neg" id="kpiActivos">936</div><div class="kpi-diff neg" id="kpiActivosDiff">▼ −170 vs 2025 (−15%)</div><div class="kpi-sub" id="kpiActivosSub">Vs 1.106 en 2025</div><div style="font-size:0.64rem;color:#d97706;font-weight:700;margin-top:5px;line-height:1.3;" id="kpiActivosParcial">⏳ Bimestre en curso — cifra parcial, sube hasta el cierre (~fin de julio)</div></div>
+  <div class="kpi b"><div class="kpi-lbl" id="kpiActivosLbl">Alumnos activos último bimestre</div><div class="kpi-val neg" id="kpiActivos">936</div><div class="kpi-diff neg" id="kpiActivosDiff">▼ −170 vs 2025 (−15%)</div><div class="kpi-sub" id="kpiActivosSub">Vs 1.106 en 2025</div><div style="font-size:0.64rem;color:#d97706;font-weight:700;margin-top:5px;line-height:1.3;" id="kpiActivosParcial">⏳ Bimestre en curso — cifra parcial, sube hasta el cierre (~fin de septiembre)</div></div>
   <div class="kpi r"><div class="kpi-lbl">Sedes con deuda</div><div class="kpi-val neg">12/13</div><div class="kpi-sub">Dato manual · ver Cuenta Corriente Centros</div></div>
   <div class="kpi g"><div class="kpi-lbl">Sedes y CADs activos</div><div class="kpi-val pos" id="kpiCantSedes">15</div><div class="kpi-sub" id="kpiCantSedesSub">Con inscriptos registrados en 2026</div></div>
 </div>
@@ -833,6 +833,7 @@ tfoot tr td{background:#fafafa;font-weight:600;color:var(--text-1);border-top:0.
       <button class="mo-tab" onclick="selectMonth('06','10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I','JUN 2026')">JUN</button>
       <button class="mo-tab active" onclick="selectMonth('07','13Vv10pwm_586veWBAX2ezPPA0xGyQ6IdZl2jMbrhjL8','JUL 2026')">JUL ◀ último cerrado</button>
       <button class="mo-tab" onclick="selectMonth('08','1hohlu0wsF03GaIsYptY5cXX2m0L9hPy3fmxxq6OL9Ws','AGO 2026')">AGO</button>
+      <button class="mo-tab" onclick="selectMonth('09','1n5HYF7BJdLr85JgTPvFM0hxhqBcAlqyyawlsLk2JoUQ','SEP 2026')">SEP</button>
     </div>
   </div>
 
@@ -1343,7 +1344,8 @@ const MESES_CAJA_BOOTSTRAP=[
   {m:'MAY',anio:2026,id:'1_h3F-GqFsiloqbpLyrYB6FWGYZOHIwFOqP7Tq46adI8'},
   {m:'JUN',anio:2026,id:'10veTMb6VERrHmK4dJUHkLMaPTpcqm7A7NLwqEMRLt9I'},
   {m:'JUL',anio:2026,id:'13Vv10pwm_586veWBAX2ezPPA0xGyQ6IdZl2jMbrhjL8'},
-  {m:'AGO',anio:2026,id:'1hohlu0wsF03GaIsYptY5cXX2m0L9hPy3fmxxq6OL9Ws'}
+  {m:'AGO',anio:2026,id:'1hohlu0wsF03GaIsYptY5cXX2m0L9hPy3fmxxq6OL9Ws'},
+  {m:'SEP',anio:2026,id:'1n5HYF7BJdLr85JgTPvFM0hxhqBcAlqyyawlsLk2JoUQ'}
 ];
 let _mesesCajaCache=null;
 async function resolverMesesCaja(){
@@ -1542,12 +1544,11 @@ async function loadResumenEjecutivo(btn){
   let activosUltimo=null;
   try{
     const{sedes,y2025}=await fetchSedes26Data();
-    // JUN-JUL (b4a, en curso) — antes usaba b3a (ABR-MAY, último cerrado), que
-    // quedó desalineado con la tarjeta "Alumnos activos" de Red de Sedes al
-    // cambiar esa a mostrar el bimestre en curso (2026-07-31). Mismo número en
-    // las dos secciones ahora, en vez de dos cifras distintas para "activos".
-    activosUltimo=sedes.reduce((s,x)=>s+(x.b4a||0),0);
-    const activos2025Mismo=y2025?y2025.b4a:null;
+    // AGO-SET (b5a, en curso) — antes b4a (JUN-JUL), actualizado 2026-09-03 al
+    // rollover del bimestre. Mismo índice que usa renderSedesSection (Red de
+    // Sedes) para que las dos secciones sigan mostrando el mismo número.
+    activosUltimo=sedes.reduce((s,x)=>s+(x.b5a||0),0);
+    const activos2025Mismo=y2025?y2025.b5a:null;
     const valEl=document.getElementById('resActivosTotales'),subEl=document.getElementById('resActivosTotalesSub');
     valEl.textContent=activosUltimo.toLocaleString('es-AR');
     if(activos2025Mismo){
@@ -2039,12 +2040,14 @@ new Chart(document.getElementById('chartOlivos'),{type:'bar',data:{labels:D.bach
 // ════════════ SEDES 2026 · CHARTS + TABLA (live desde "Resumen Sedes 2026") ════════════
 let chartBimNuevos=null,chartBimActivos=null;
 function renderSedesSection(sedes,y2025){
-  const BIM_LABELS=['DIC-ENE','FEB-MAR','ABR-MAY','JUN-JUL*'];
+  // AGO-SET (b5) es el bimestre en curso desde septiembre 2026 — JUN-JUL (b4)
+  // ya cerró, se le sacó el "*" (que marca "en curso, cifra parcial").
+  const BIM_LABELS=['DIC-ENE','FEB-MAR','ABR-MAY','JUN-JUL','AGO-SET*'];
   const sum=k=>sedes.reduce((s,x)=>s+(x[k]||0),0);
-  const n2026=[sum('b1n'),sum('b2n'),sum('b3n'),sum('b4n')];
-  const a2026=[sum('b1a'),sum('b2a'),sum('b3a'),sum('b4a')];
-  const n2025=y2025?[y2025.b1n,y2025.b2n,y2025.b3n,y2025.b4n]:[null,null,null,null];
-  const a2025=y2025?[y2025.b1a,y2025.b2a,y2025.b3a,y2025.b4a]:[null,null,null,null];
+  const n2026=[sum('b1n'),sum('b2n'),sum('b3n'),sum('b4n'),sum('b5n')];
+  const a2026=[sum('b1a'),sum('b2a'),sum('b3a'),sum('b4a'),sum('b5a')];
+  const n2025=y2025?[y2025.b1n,y2025.b2n,y2025.b3n,y2025.b4n,y2025.b5n]:[null,null,null,null,null];
+  const a2025=y2025?[y2025.b1a,y2025.b2a,y2025.b3a,y2025.b4a,y2025.b5a]:[null,null,null,null,null];
 
   if(chartBimNuevos)chartBimNuevos.destroy();
   if(chartBimActivos)chartBimActivos.destroy();
@@ -2076,15 +2079,21 @@ function renderSedesSection(sedes,y2025){
     extremesEl.innerHTML=peores.length?peores.map(mini).join(''):'<div style="font-size:0.72rem;color:var(--text-3);">Ninguna sede con caída de activos entre FEB-MAR y ABR-MAY.</div>';
   }
 
-  let h=`<thead><tr><th rowspan="2">Sede</th><th class="tc grp" colspan="2">DIC-ENE</th><th class="tc grp" colspan="2">FEB-MAR</th><th class="tc grp" colspan="2">ABR-MAY</th><th class="tc grp" colspan="2">JUN-JUL*</th><th class="tr" rowspan="2">Total cerrado</th></tr><tr><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th></tr></thead><tbody>`;
-  const sorted=[...sedes].sort((a,b)=>((b.b1n||0)+(b.b2n||0)+(b.b3n||0)+(b.b4n||0))-((a.b1n||0)+(a.b2n||0)+(a.b3n||0)+(a.b4n||0)));
-  let t1n=0,t1a=0,t2n=0,t2a=0,t3n=0,t3a=0,t4n=0,t4a=0;
+  let h=`<thead><tr><th rowspan="2">Sede</th><th class="tc grp" colspan="2">DIC-ENE</th><th class="tc grp" colspan="2">FEB-MAR</th><th class="tc grp" colspan="2">ABR-MAY</th><th class="tc grp" colspan="2">JUN-JUL</th><th class="tc grp" colspan="2">AGO-SET*</th><th class="tr" rowspan="2">Total cerrado</th></tr><tr><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th><th class="tc grp">N</th><th class="tc grp">A</th></tr></thead><tbody>`;
+  // Orden por total de inscriptos nuevos incluyendo b5 (AGO-SET) — si no, una
+  // sede que sólo tiene datos en el bimestre en curso (como "MDP - Cpitanes",
+  // sin nada en b1-b4) quedaría siempre al final del ranking sin importar cuánto
+  // aportó este bimestre.
+  const sorted=[...sedes].sort((a,b)=>((b.b1n||0)+(b.b2n||0)+(b.b3n||0)+(b.b4n||0)+(b.b5n||0))-((a.b1n||0)+(a.b2n||0)+(a.b3n||0)+(a.b4n||0)+(a.b5n||0)));
+  let t1n=0,t1a=0,t2n=0,t2a=0,t3n=0,t3a=0,t4n=0,t4a=0,t5n=0,t5a=0;
   sorted.forEach(s=>{
+    // "Total cerrado" sigue siendo sólo b1-b3 (no incluye b4 ni b5) — mismo
+    // criterio que ya usaba esta columna antes de este fix, no se amplía acá.
     const tot=(s.b1n||0)+(s.b2n||0)+(s.b3n||0);
-    t1n+=s.b1n||0;t1a+=s.b1a||0;t2n+=s.b2n||0;t2a+=s.b2a||0;t3n+=s.b3n||0;t3a+=s.b3a||0;t4n+=s.b4n||0;t4a+=s.b4a||0;
-    h+=`<tr><td class="bold">${s.n}</td><td class="tc num-s">${dash(s.b1n)}</td><td class="tc">${dash(s.b1a)}</td><td class="tc num-s">${dash(s.b2n)}</td><td class="tc">${dash(s.b2a)}</td><td class="tc num-s">${dash(s.b3n)}</td><td class="tc">${dash(s.b3a)}</td><td class="tc num-s">${dash(s.b4n)}</td><td class="tc">${dash(s.b4a)}</td><td class="tr bold">${tot}</td></tr>`;
+    t1n+=s.b1n||0;t1a+=s.b1a||0;t2n+=s.b2n||0;t2a+=s.b2a||0;t3n+=s.b3n||0;t3a+=s.b3a||0;t4n+=s.b4n||0;t4a+=s.b4a||0;t5n+=s.b5n||0;t5a+=s.b5a||0;
+    h+=`<tr><td class="bold">${s.n}</td><td class="tc num-s">${dash(s.b1n)}</td><td class="tc">${dash(s.b1a)}</td><td class="tc num-s">${dash(s.b2n)}</td><td class="tc">${dash(s.b2a)}</td><td class="tc num-s">${dash(s.b3n)}</td><td class="tc">${dash(s.b3a)}</td><td class="tc num-s">${dash(s.b4n)}</td><td class="tc">${dash(s.b4a)}</td><td class="tc num-s">${dash(s.b5n)}</td><td class="tc">${dash(s.b5a)}</td><td class="tr bold">${tot}</td></tr>`;
   });
-  h+=`</tbody><tfoot><tr><td>TOTAL 2026</td><td class="tc num-s bold">${t1n}</td><td class="tc bold">${t1a}</td><td class="tc num-s bold">${t2n}</td><td class="tc bold">${t2a}</td><td class="tc num-s bold">${t3n}</td><td class="tc bold">${t3a}</td><td class="tc num-s bold">${t4n||'—'}</td><td class="tc bold">${t4a||'—'}</td><td class="tr bold">${t1n+t2n+t3n}</td></tr></tfoot>`;
+  h+=`</tbody><tfoot><tr><td>TOTAL 2026</td><td class="tc num-s bold">${t1n}</td><td class="tc bold">${t1a}</td><td class="tc num-s bold">${t2n}</td><td class="tc bold">${t2a}</td><td class="tc num-s bold">${t3n}</td><td class="tc bold">${t3a}</td><td class="tc num-s bold">${t4n||'—'}</td><td class="tc bold">${t4a||'—'}</td><td class="tc num-s bold">${t5n||'—'}</td><td class="tc bold">${t5a||'—'}</td><td class="tr bold">${t1n+t2n+t3n}</td></tr></tfoot>`;
   t.innerHTML=h;
 
   const nuevosCerrados=n2026[0]+n2026[1]+n2026[2];
@@ -2099,21 +2108,22 @@ function renderSedesSection(sedes,y2025){
     document.getElementById('kpiInscriptos').className='kpi-val '+(diffN>=0?'pos':'neg');
   }
 
-  // JUN-JUL (índice 3, último bimestre EN CURSO, no el último cerrado) — decisión
-  // 2026-07-31: mostrar el número más actual aunque sea parcial, con aclaración
-  // visible en la propia tarjeta (ver #kpiActivosParcial) para que no se confunda
-  // con una cifra de cierre. Antes usaba índice 2 (ABR-MAY, último cerrado).
-  const activosUltimo=a2026[3],activos2025Mismo=a2025[3];
+  // AGO-SET (índice 4, último bimestre EN CURSO, no el último cerrado) — mismo
+  // criterio que decisión 2026-07-31 (antes JUN-JUL, índice 3), actualizado
+  // 2026-09-03 al arrancar el bimestre siguiente. Incluye "MDP - Cpitanes"
+  // (~117 alumnos nuevos, acuerdo con el sindicato de capitanes de Mar del
+  // Plata) como fila propia, sin mezclarse con la fila "Mar del Plata".
+  const activosUltimo=a2026[4],activos2025Mismo=a2025[4];
   document.getElementById('sedesInsActivos').textContent=activosUltimo.toLocaleString('es-AR');
   document.getElementById('kpiActivos').textContent=activosUltimo.toLocaleString('es-AR');
-  document.getElementById('kpiActivosLbl').textContent='Alumnos activos · JUN-JUL 2026';
+  document.getElementById('kpiActivosLbl').textContent='Alumnos activos · AGO-SET 2026';
   if(activos2025Mismo){
     const diffA=activosUltimo-activos2025Mismo,pctA=Math.round(diffA/activos2025Mismo*100);
     const elA=document.getElementById('kpiActivosDiff');
     elA.innerHTML=(diffA>=0?'▲ +':'▼ −')+Math.abs(diffA).toLocaleString('es-AR')+' vs 2025 ('+(pctA>=0?'+':'')+pctA+'%)';
     elA.className='kpi-diff '+(diffA>=0?'pos':'neg');
     document.getElementById('kpiActivos').className='kpi-val '+(diffA>=0?'pos':'neg');
-    document.getElementById('kpiActivosSub').textContent='Vs '+activos2025Mismo.toLocaleString('es-AR')+' en JUN-JUL 2025';
+    document.getElementById('kpiActivosSub').textContent='Vs '+activos2025Mismo.toLocaleString('es-AR')+' en AGO-SET 2025';
   }
   document.getElementById('kpiCantSedes').textContent=sedes.length;
 }
@@ -2125,9 +2135,14 @@ async function fetchSedes26Data(){
   for(const r of rows){
     const rank=(r[0]||'').trim(),name=(r[1]||'').trim();
     if(!name)continue;
-    if(/^2025$/.test(name)){y2025={b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9])};continue;}
+    // b5 = AGO-SET (bimestre en curso, arrancó a partir de septiembre 2026 —
+    // antes el parser sólo leía hasta b4/JUN-JUL; con el rollover a un 5°
+    // bimestre, las columnas 11/12 (r[10]/r[11]) quedaban sin leerse y una
+    // fila nueva sin datos en b1-b4, como "MDP - Cpitanes", parecía vacía
+    // aunque tuviera 117 activos cargados en AGO-SET. Ver renderSedesSection.
+    if(/^2025$/.test(name)){y2025={b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9]),b5n:num(r[10]),b5a:num(r[11])};continue;}
     if(!/^\d+$/.test(rank))continue;
-    sedes.push({n:name,b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9])});
+    sedes.push({n:name,b1n:num(r[2]),b1a:num(r[3]),b2n:num(r[4]),b2a:num(r[5]),b3n:num(r[6]),b3a:num(r[7]),b4n:num(r[8]),b4a:num(r[9]),b5n:num(r[10]),b5a:num(r[11])});
   }
   if(sedes.length<5)throw new Error('parse failed');
   return{sedes,y2025:y2025||FALLBACK_SEDES_Y2025};
